@@ -188,6 +188,8 @@ export class World {
 
   _resize() {
     if (!this.options.autoResize) {
+      this._logicalWidth = this.canvas.width
+      this._logicalHeight = this.canvas.height
       this._createNodes()
       return
     }
@@ -202,11 +204,15 @@ export class World {
     this.canvas.style.height = logicalHeight + 'px'
 
     this._dpr = dpr
-    this.ctx.scale(dpr, dpr)
+    this._logicalWidth = logicalWidth
+    this._logicalHeight = logicalHeight
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     this._createNodes()
   }
 
-  _onResize() { this._resize() }
+  _onResize() {
+    this._resize()
+  }
 
   _onMouseMove(e) {
     let mx, my
@@ -254,13 +260,34 @@ export class World {
   _onClick(e) {
     const { onNodeClick } = this.options
     if (!onNodeClick) return
-    const mx = e.clientX
-    const my = e.clientY + window.scrollY
+    let mx, my
+    if (this.options.autoResize) {
+      mx = e.clientX
+      my = e.clientY + window.scrollY
+    } else {
+      const rect = this.canvas.getBoundingClientRect()
+      mx = e.clientX - rect.left
+      my = e.clientY - rect.top
+    }
     for (const node of this.nodes) {
       if (Math.hypot(node.x - mx, node.y - my) < node.r * 3) {
         onNodeClick(node)
         break
       }
+    }
+  }
+
+  resize() {
+    this._resize()
+  }
+
+  update(newOptions) {
+    Object.assign(this.options, newOptions)
+    if (newOptions.colors && !newOptions.edgeColors) {
+      this.options.edgeColors = newOptions.colors
+    }
+    if (newOptions.forces !== undefined) {
+      this.forces = newOptions.forces
     }
   }
 
@@ -297,8 +324,6 @@ export class World {
       ctx.lineTo(b.x, b.y)
     }
 
-    if (edgeStyle === 'dashed') ctx.setLineDash([4, 6])
-
     if (edgeStyle === 'gradient') {
       const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y)
       grad.addColorStop(0, a.color)
@@ -311,8 +336,6 @@ export class World {
     ctx.globalAlpha = opacity
     ctx.lineWidth = edgeWidth
     ctx.stroke()
-
-    if (edgeStyle === 'dashed') ctx.setLineDash([])
 
     if (edgeCounts) {
       edgeCounts[i]++
@@ -327,8 +350,10 @@ export class World {
     const edgeCounts = needsCounts ? new Int32Array(nodes.length) : null
     let totalEdges = 0
 
+    if (opts.edgeStyle === 'dashed') ctx.setLineDash([4, 6])
+
     if (spatialIndex) {
-      const qt = new QuadTree(0, 0, width, height)
+      const qt = new QuadTree(-1, -1, width + 2, height + 2)
       for (const node of nodes) qt.insert(node)
 
       for (let i = 0; i < nodes.length; i++) {
@@ -371,11 +396,12 @@ export class World {
           if (dist < edgeMaxDist) continue // already handled in main pass
           if (dist >= fallbackDist) break
           if (maxEdgesPerNode !== null && edgeCounts[j] >= maxEdgesPerNode) continue
-          const opacity = (1 - dist / fallbackDist) * opts.edgeMaxOpacity * 0.5
-          this._drawEdge(ctx, a, nodes[j], i, j, { ...opts, edgeMaxDist: fallbackDist, edgeMaxOpacity: opacity * (fallbackDist / dist) }, edgeCounts)
+          this._drawEdge(ctx, a, nodes[j], i, j, { ...opts, edgeMaxDist: fallbackDist, edgeMaxOpacity: opts.edgeMaxOpacity * 0.5 }, edgeCounts)
         }
       }
     }
+
+    if (opts.edgeStyle === 'dashed') ctx.setLineDash([])
   }
 
   _drawNodes(ctx, nodes, opts, width, height) {
@@ -391,7 +417,7 @@ export class World {
         1
       )
       const alpha = (node.brightness ?? 1) * edgeFade
-      const shape = node.shape ? resolveShape(node.shape) : drawShape
+      const shape = node.shape ? (node._resolvedShape ??= resolveShape(node.shape)) : drawShape
 
       if (opts.glowOnLargeNodes && node.r > opts.glowThreshold) {
         const haloR = node.r * opts.glowScale
@@ -426,7 +452,7 @@ export class World {
     const height = this._logicalHeight ?? canvas.height
     const opts = this.options
 
-    const context = { time, mouse: this.mouse, scrollY: this.scrollY, width, height }
+    const context = Object.freeze({ time, mouse: this.mouse, scrollY: this.scrollY, width, height })
 
     for (const force of forces) force(nodes, context)
 
