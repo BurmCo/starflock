@@ -355,7 +355,7 @@ for (const { title, config, display } of CONFIGS) {
     for (const entry of entries) {
       canvas.width = entry.contentRect.width
       canvas.height = entry.contentRect.height
-      world._createNodes()
+      world.resize()
     }
   })
   ro.observe(canvas)
