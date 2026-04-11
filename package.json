@@ -6,6 +6,7 @@
   "author": "Corvin Burmeister",
   "license": "MIT",
   "type": "module",
+  "types": "index.d.ts",
   "main": "./src/index.js",
   "module": "./src/index.js",
   "exports": {
@@ -14,7 +15,8 @@
   },
   "files": [
     "src",
-    "README.md"
+    "README.md",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",
