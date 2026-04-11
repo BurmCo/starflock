@@ -1,4 +1,4 @@
-import { World, drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wind, nodeRepel, noise, attract } from '../src/index.js'
+import { World, drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wind, nodeRepel, noise, attract } from 'https://esm.sh/cosmograph@0.1.0'
 
 // Star color palettes
 const STARS = ['#ffffff', '#cce8ff', '#fff4e0']       // white, blue-white, warm white
