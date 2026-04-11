@@ -13,14 +13,25 @@ import { World } from '../World.js'
  */
 export function useCosmograph(options = {}) {
   const canvasRef = useRef(null)
+  const worldRef = useRef(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const world = new World({ canvas, ...options })
+    worldRef.current = world
     world.start()
-    return () => world.stop()
+    return () => {
+      world.stop()
+      worldRef.current = null
+    }
   }, [])
+
+  useEffect(() => {
+    if (worldRef.current) {
+      worldRef.current.update(options)
+    }
+  })  // no deps — runs after every render, world.update() is cheap for unchanged options
 
   return canvasRef
 }
