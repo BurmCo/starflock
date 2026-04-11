@@ -43,11 +43,13 @@ export const cross = (ctx, x, y, r) => {
 }
 
 export const ring = (ctx, x, y, r) => {
+  ctx.save()
   ctx.beginPath()
   ctx.arc(x, y, r, 0, Math.PI * 2)
   ctx.lineWidth = r * 0.5
   ctx.strokeStyle = ctx.fillStyle
   ctx.stroke()
+  ctx.restore()
 }
 
 /** Resolve a shape option to a render function */
