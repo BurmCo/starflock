@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cosmograph — config playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0c0b;
+      color: #e8e4dc;
+      font-family: 'Fragment Mono', monospace, monospace;
+      padding: 32px;
+    }
+
+    h1 {
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: #5DCAA5;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    h1 span { color: #4a4845; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .card canvas {
+      display: block;
+      width: 100%;
+      height: 60vh;
+    }
+
+    .card-info {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: #e8e4dc;
+      margin-bottom: 6px;
+      font-family: sans-serif;
+      font-weight: 600;
+    }
+
+    .card-config {
+      font-size: 10px;
+      color: #4a4845;
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    .card-config .key { color: #5DCAA5; }
+    .card-config .val { color: #F0997B; }
+
+    .canvas-wrap {
+      position: relative;
+    }
+
+    .scroll-toggle {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,12,11,0.75);
+      backdrop-filter: blur(8px);
+      font-size: 10px;
+      color: #4a4845;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .scroll-toggle:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: #8a8880;
+    }
+
+    .scroll-toggle.active {
+      border-color: #3B6D11;
+      color: #5DCAA5;
+    }
+
+    .scroll-toggle.active:hover {
+      background: rgba(59,109,17,0.15);
+    }
+
+    /* pip */
+    .scroll-toggle::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4a4845;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .scroll-toggle.active::before { background: #5DCAA5; }
+
+    /* direction hint shown when active+hovered */
+    .scroll-toggle .hint {
+      display: none;
+      color: #F0997B;
+      margin-left: 2px;
+    }
+    .scroll-toggle.active:hover .hint { display: inline; }
+  </style>
+</head>
+<body>
+  <h1>cosmograph <span>//</span> config playground</h1>
+  <div class="grid" id="grid"></div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

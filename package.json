@@ -1,0 +1,28 @@
+{
+  "name": "cosmograph",
+  "version": "0.1.0",
+  "description": "Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.",
+  "keywords": ["canvas", "particles", "animation", "constellation", "webgl", "background", "force", "interactive"],
+  "author": "Corvin Burmeister",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./react": "./src/adapters/react.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BurmCo/cosmograph.git"
+  },
+  "homepage": "https://github.com/BurmCo/cosmograph#readme",
+  "bugs": {
+    "url": "https://github.com/BurmCo/cosmograph/issues"
+  },
+  "sideEffects": false
+}
