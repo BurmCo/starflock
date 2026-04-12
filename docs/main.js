@@ -9,25 +9,64 @@ const FORCE_FNS = { drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wi
 
 // Keys must match FORCE_FNS exactly
 const FORCE_DEFS = {
-  drift:       [{ key: 'maxSpeed',  default: 0.5 }],
-  dampen:      [{ key: 'factor',    default: 0.98 }],
-  twinkle:     [{ key: 'variance',  default: 0.5 }],
-  mouseRepel:  [{ key: 'radius',    default: 100 }, { key: 'strength', default: 0.01 }, { key: 'mode', default: 'repel' }],
-  wind:        [{ key: 'angle',     default: 0 },   { key: 'strength', default: 0.001 }, { key: 'gust', default: 0 }],
-  gravity:     [{ key: 'x',        default: 0.5 },  { key: 'y',        default: 0.5 },   { key: 'strength', default: 0.0005 }],
-  nodeRepel:   [{ key: 'radius',    default: 40 },   { key: 'strength', default: 0.003 }],
-  noise:       [{ key: 'scale',     default: 0.004 },{ key: 'strength', default: 0.001 }, { key: 'speed', default: 0.0003 }],
-  attract:     [{ key: 'x',        default: 0.5 },  { key: 'y',        default: 0.5 },   { key: 'radius', default: 250 }, { key: 'strength', default: 0.003 }],
-  scrollDrift: [{ key: 'mode',     default: 'wave' },{ key: 'strength', default: 8 }],
+  drift:       [{ key: 'maxSpeed',  default: 0.5,    hint: '0.1 – 2.0' }],
+  dampen:      [{ key: 'factor',    default: 0.98,   hint: '0.9 – 0.999' }],
+  twinkle:     [{ key: 'variance',  default: 0.5,    hint: '0.0 – 1.0' }],
+  mouseRepel:  [{ key: 'radius',    default: 100,    hint: '50 – 300' }, { key: 'strength', default: 0.01, hint: '0.001 – 0.05' }, { key: 'mode', default: 'repel', options: ['repel', 'attract'] }],
+  wind:        [{ key: 'angle',     default: 0,      hint: '0 – 360' },  { key: 'strength', default: 0.001, hint: '0.0001 – 0.01' }, { key: 'gust', default: 0, hint: '0.0 – 1.0' }],
+  gravity:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'strength', default: 0.0005, hint: '0.0001 – 0.005' }],
+  nodeRepel:   [{ key: 'radius',    default: 40,     hint: '10 – 150' },  { key: 'strength', default: 0.003, hint: '0.001 – 0.02' }],
+  noise:       [{ key: 'scale',     default: 0.004,  hint: '0.001 – 0.02' }, { key: 'strength', default: 0.001, hint: '0.0001 – 0.005' }, { key: 'speed', default: 0.0003, hint: '0.0001 – 0.002' }],
+  attract:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'radius', default: 250, hint: '50 – 500' }, { key: 'strength', default: 0.003, hint: '0.0005 – 0.01' }],
+  scrollDrift: [{ key: 'mode',     default: 'wave',  options: ['wave', 'shift'] }, { key: 'strength', default: 8, hint: '1 – 30' }],
+}
+
+const FORCE_DESCS = {
+  drift:       'Gives each node a slow random velocity, making the field gently wander.',
+  dampen:      'Multiplies every velocity by a factor each frame — slows nodes without fully stopping them.',
+  twinkle:     'Randomly varies node opacity each frame for a sparkling effect.',
+  mouseRepel:  'Pushes (or pulls) nodes near the cursor. Radius is in canvas pixels.',
+  wind:        'Applies a constant directional acceleration to all nodes. Gust adds turbulence.',
+  gravity:     'Pulls nodes toward a normalised point (x/y 0–1). Good for clustering.',
+  nodeRepel:   'Nodes push each other away when closer than radius, preventing pileups.',
+  noise:       'Steers nodes along a slow-moving Perlin noise field for organic flow.',
+  attract:     'Pulls nodes within radius toward a normalised point, like gravity with a cutoff.',
+  scrollDrift: 'Shifts nodes when the page is scrolled — wave mode pulses, shift mode translates.',
 }
 
 const PARAM_DEFS = [
   'nodeCount', 'nodeSize', 'colors', 'nodeShape', 'nodeRotation',
   'nodeColorMode', 'nodeSpawnRegion', 'nodeSizeDistribution',
   'edgeMaxDist', 'edgeMaxOpacity', 'edgeWidth', 'edgeStyle',
-  'edgeCurvature', 'edgeColors', 'maxEdgesPerNode', 'minEdgesPerNode',
-  'blendMode', 'glowOpacity', 'glowScale', 'glowThreshold', 'background',
+  'edgeCurvature', 'edgeColors', 'edgeColorMode', 'maxEdgesPerNode', 'minEdgesPerNode',
+  'renderOrder', 'blendMode', 'glowOpacity', 'glowScale', 'glowThreshold', 'background',
 ]
+
+const PARAM_DESCS = {
+  nodeCount:           { desc: 'Total number of nodes spawned in the world.',                           hint: '20 – 500' },
+  nodeSize:            { desc: 'Base radius of each node in canvas pixels.',                            hint: '1 – 20' },
+  colors:              { desc: 'Array of hex colours nodes are randomly drawn from.',                   isColorArray: true },
+  nodeShape:           { desc: 'Shape used to render nodes.',                                           options: ['circle', 'ring', 'diamond', 'star', 'cross'] },
+  nodeRotation:        { desc: 'Rotation angle applied to non-circular node shapes (radians).',         hint: '0 – 6.28' },
+  nodeColorMode:       { desc: 'How colour is assigned to nodes.',                                      options: ['random', 'sequential', 'gradient', 'by-size', 'by-position'] },
+  nodeSpawnRegion:     { desc: 'Region where new nodes appear.',                                        options: ['full', 'center', 'edges'] },
+  nodeSizeDistribution:{ desc: 'Distribution curve for node sizes.',                                   options: ['uniform', 'gaussian', 'weighted-small'] },
+  edgeMaxDist:         { desc: 'Maximum distance between nodes for an edge to be drawn.',               hint: '50 – 300' },
+  edgeMaxOpacity:      { desc: 'Opacity of edges at their closest point.',                             hint: '0.0 – 1.0' },
+  edgeWidth:           { desc: 'Stroke width of edges in canvas pixels.',                              hint: '0.5 – 5' },
+  edgeStyle:           { desc: 'Rendering style of edges.',                                            options: ['solid', 'dashed'] },
+  edgeCurvature:       { desc: 'How much edges bow between nodes (0 = straight).',                     hint: '0.0 – 1.0' },
+  edgeColors:          { desc: 'Array of hex colours for edges. Defaults to node colours if omitted.', isColorArray: true },
+  edgeColorMode:       { desc: 'Which node colour is used to tint each edge.',                         options: ['alternate', 'source', 'target'] },
+  maxEdgesPerNode:     { desc: 'Cap on how many edges a single node can draw.',                        hint: '1 – 10' },
+  minEdgesPerNode:     { desc: 'Minimum edges drawn per node (0 = none).',                             hint: '0 – 5' },
+  renderOrder:         { desc: 'Whether edges or nodes are drawn on top.',                             options: ['edges-first', 'nodes-first'] },
+  blendMode:           { desc: 'Canvas globalCompositeOperation for node rendering.',                  options: ['source-over', 'lighter', 'screen', 'multiply', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity', 'xor'] },
+  glowOpacity:         { desc: 'Opacity of the soft bloom drawn around each node.',                   hint: '0.0 – 1.0' },
+  glowScale:           { desc: 'How large the bloom halo is relative to the node.',                   hint: '1.0 – 6.0' },
+  glowThreshold:       { desc: 'Minimum node brightness before glow is applied.',                     hint: '0.0 – 1.0' },
+  background:          { desc: 'Canvas background colour.',                                            isColor: true },
+}
 
 function parseValue(v) {
   if (typeof v !== 'string') return v
@@ -46,6 +85,28 @@ function esc(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+function toHex(val) {
+  const s = String(val).trim().replace(/^["']|["']$/g, '')
+  return /^#[0-9a-fA-F]{6}$/.test(s) ? s : '#000000'
+}
+
+function hsvToHex(h, s, v) {
+  const f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(0, Math.min(k, 4 - k, 1))
+  return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
+}
+
+function hexToHsv(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+  const h = d === 0 ? 0
+    : max === r ? ((g - b) / d % 6) * 60
+    : max === g ? (b - r) / d * 60 + 120
+    : (r - g) / d * 60 + 240
+  return [(h + 360) % 360, max === 0 ? 0 : d / max, max]
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -95,9 +156,156 @@ function applyWorld() {
     }
     return FORCE_FNS[f.name](params)
   })
-  world?.destroy()
+  world?.stop()
   world = new World({ canvas, autoResize: false, pauseWhenHidden: true, ...config, forces })
   world.start()
+}
+
+// ─── In-Page Color Picker ─────────────────────────────────────────────────────
+
+const cpop = (() => {
+  const el = document.createElement('div')
+  el.className = 'cpop'
+  el.style.display = 'none'
+  el.innerHTML = `
+    <div class="cpop-sv"><div class="cpop-sv-cur"></div></div>
+    <div class="cpop-hue"><div class="cpop-hue-cur"></div></div>
+    <input class="cpop-hex" type="text" maxlength="7" spellcheck="false">
+  `
+  document.body.appendChild(el)
+
+  let h = 0, s = 1, v = 1, dragging = null, onChange = null
+
+  const svEl  = el.querySelector('.cpop-sv')
+  const svCur = el.querySelector('.cpop-sv-cur')
+  const hueEl = el.querySelector('.cpop-hue')
+  const hueCur = el.querySelector('.cpop-hue-cur')
+  const hexIn  = el.querySelector('.cpop-hex')
+
+  function sync() {
+    svEl.style.setProperty('--h', h)
+    svCur.style.left = (s * 100) + '%'
+    svCur.style.top  = ((1 - v) * 100) + '%'
+    hueCur.style.left = (h / 360 * 100) + '%'
+    hexIn.value = hsvToHex(h, s, v)
+    onChange?.(hsvToHex(h, s, v))
+  }
+
+  function applySV(e) {
+    const r = svEl.getBoundingClientRect()
+    s = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width))
+    v = Math.max(0, Math.min(1, 1 - (e.clientY - r.top) / r.height))
+    sync()
+  }
+
+  function applyHue(e) {
+    const r = hueEl.getBoundingClientRect()
+    h = Math.max(0, Math.min(360, (e.clientX - r.left) / r.width * 360))
+    sync()
+  }
+
+  svEl.addEventListener('mousedown',  e => { dragging = 'sv';  applySV(e);  e.preventDefault() })
+  hueEl.addEventListener('mousedown', e => { dragging = 'hue'; applyHue(e); e.preventDefault() })
+  document.addEventListener('mousemove', e => {
+    if (dragging === 'sv')  applySV(e)
+    if (dragging === 'hue') applyHue(e)
+  })
+  document.addEventListener('mouseup', () => { dragging = null })
+
+  hexIn.addEventListener('input', e => {
+    const val = e.target.value
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      ;[h, s, v] = hexToHsv(val)
+      svEl.style.setProperty('--h', h)
+      svCur.style.left  = (s * 100) + '%'
+      svCur.style.top   = ((1 - v) * 100) + '%'
+      hueCur.style.left = (h / 360 * 100) + '%'
+      onChange?.(val)
+    }
+  })
+
+  document.addEventListener('mousedown', e => {
+    if (el.style.display === 'none') return
+    if (!el.contains(e.target) && !e.target.closest('.color-swatch-wrap') && !e.target.closest('.param-color-btn')) {
+      el.style.display = 'none'
+    }
+  }, true)
+
+  return {
+    open(anchor, hex, cb) {
+      ;[h, s, v] = hexToHsv(toHex(hex))
+      onChange = cb
+      svEl.style.setProperty('--h', h)
+      svCur.style.left  = (s * 100) + '%'
+      svCur.style.top   = ((1 - v) * 100) + '%'
+      hueCur.style.left = (h / 360 * 100) + '%'
+      hexIn.value = hsvToHex(h, s, v)
+      el.style.display = 'block'
+      const ar = anchor.getBoundingClientRect()
+      const pw = el.offsetWidth || 180, ph = el.offsetHeight || 200
+      let top  = ar.bottom + 6
+      let left = ar.left
+      if (top  + ph > window.innerHeight - 8) top  = ar.top - ph - 6
+      if (left + pw > window.innerWidth  - 8) left = window.innerWidth - pw - 8
+      el.style.top  = top  + 'px'
+      el.style.left = left + 'px'
+    },
+    close() { el.style.display = 'none' },
+  }
+})()
+
+// ─── Input Helpers ────────────────────────────────────────────────────────────
+
+function parseColors(val) {
+  try { const a = JSON.parse(val); if (Array.isArray(a)) return a } catch (e) {}
+  return []
+}
+
+function colorEditorHTML(val) {
+  const colors = parseColors(val)
+  const swatches = colors.map((c, i) => `
+    <span class="color-swatch-wrap">
+      <button class="color-swatch" data-color-idx="${i}" data-color="${esc(c)}" style="background:${esc(c)}"></button>
+      <button class="color-swatch-remove" data-color-idx="${i}" tabindex="-1">✕</button>
+    </span>`).join('')
+  return `<div class="color-array-editor" id="color-editor">
+    <div class="color-swatches">${swatches}</div>
+    <button class="color-swatch-add" id="color-add">+</button>
+  </div>`
+}
+
+function subparamInputHTML(def, forceIdx, f) {
+  const val = f.params[def.key] ?? def.default
+  if (def.options) {
+    return `<select class="subparam-input" data-force-idx="${forceIdx}" data-force-key="${def.key}">
+      ${def.options.map(o => `<option value="${o}"${val === o ? ' selected' : ''}>${o}</option>`).join('')}
+    </select>`
+  }
+  return `<input class="subparam-input" data-force-idx="${forceIdx}" data-force-key="${def.key}" value="${esc(val)}">`
+}
+
+function paramValInputHTML(key, val) {
+  const def = PARAM_DESCS[key]
+  if (def?.isColorArray) return colorEditorHTML(val)
+  if (def?.isColor) {
+    const hex = toHex(val)
+    return `<button class="param-color-btn" id="param-val" data-color="${esc(hex)}" style="background:${esc(hex)}"></button>`
+  }
+  if (def?.options) {
+    return `<select class="param-val-select" id="param-val">
+      ${def.options.map(o => `<option value="${o}"${val === o ? ' selected' : ''}>${o}</option>`).join('')}
+    </select>`
+  }
+  return `<input class="param-val-input" id="param-val" value="${esc(val)}" placeholder="val">`
+}
+
+function readParamValFromDOM(panel) {
+  const colorEditor = panel.querySelector('#color-editor')
+  if (colorEditor) {
+    return JSON.stringify([...colorEditor.querySelectorAll('.color-swatch')].map(s => s.dataset.color))
+  }
+  const pv = panel.querySelector('#param-val')
+  return pv?.dataset.color ?? pv?.value ?? ''
 }
 
 // ─── Panel Rendering ──────────────────────────────────────────────────────────
@@ -110,12 +318,14 @@ function renderPanel() {
     const isSelected = state.selectedForce === i
     const subparamsHTML = isSelected
       ? `<div class="subparams">${
+          FORCE_DESCS[f.name]
+            ? `<div class="info-box">${esc(FORCE_DESCS[f.name])}</div>`
+            : ''
+        }${
           (FORCE_DEFS[f.name] ?? []).map(def => `
             <div class="subparam-row">
-              <span class="subparam-key">${def.key}</span>
-              <input class="subparam-input"
-                data-force-idx="${i}" data-force-key="${def.key}"
-                value="${esc(f.params[def.key] ?? def.default)}" />
+              <span class="subparam-key">${def.key}${def.hint ? `<span class="info-hint">${esc(def.hint)}</span>` : ''}</span>
+              ${subparamInputHTML(def, i, f)}
             </div>`).join('')
         }</div>`
       : ''
@@ -129,8 +339,15 @@ function renderPanel() {
     .map(n => `<option value="${n}">${n}</option>`).join('')
 
   // Params section
-  const pendingKey = state.selectedParam !== null ? state.params[state.selectedParam].key : state._pendingKey
+  const pendingKey = state._pendingKey
   const pendingVal = state.selectedParam !== null ? state.params[state.selectedParam].value : state._pendingVal
+
+  const paramDef = PARAM_DESCS[pendingKey]
+  const paramInfo = paramDef
+    ? `<div class="info-box">
+        ${esc(paramDef.desc)}${paramDef.hint ? `<span class="info-hint">${esc(paramDef.hint)}</span>` : ''}
+       </div>`
+    : ''
 
   const paramsListHTML = state.params.map((p, i) => `
     <div class="param-row${state.selectedParam === i ? ' selected' : ''}" data-param-row="${i}">
@@ -161,13 +378,16 @@ function renderPanel() {
           <select class="param-key-select" id="param-key">
             ${PARAM_DEFS.map(k => `<option value="${k}"${k === pendingKey ? ' selected' : ''}>${k}</option>`).join('')}
           </select>
-          <input class="param-val-input" id="param-val" value="${esc(pendingVal)}" placeholder="val" />
+          ${paramDef?.isColorArray ? '' : paramValInputHTML(pendingKey, pendingVal)}
           <button class="param-add-btn" id="param-add">+</button>
         </div>
+        ${paramDef?.isColorArray ? colorEditorHTML(pendingVal) : ''}
+        ${paramInfo}
         <div class="param-list">${paramsListHTML}</div>
       </div>
       <div class="panel-section">
         <button class="apply-btn" id="apply-btn">Apply</button>
+        <p class="info-disclaimer">ranges shown are typical defaults, not hard limits</p>
       </div>` : ''}
   `
 
@@ -229,7 +449,12 @@ function attachEvents() {
     el.addEventListener('click', e => {
       if (e.target.closest('[data-param-remove]')) return
       const i = +el.dataset.paramRow
-      state.selectedParam = state.selectedParam === i ? null : i
+      if (state.selectedParam === i) {
+        state.selectedParam = null
+      } else {
+        state.selectedParam = i
+        state._pendingKey = state.params[i].key
+      }
       renderPanel()
     })
   })
@@ -246,17 +471,15 @@ function attachEvents() {
     })
   })
 
-  // Param key dropdown
+  // Param key dropdown — stages a new pending key and deselects any active param row
   panel.querySelector('#param-key')?.addEventListener('change', e => {
-    if (state.selectedParam !== null) {
-      state.params[state.selectedParam].key = e.target.value
-      renderPanel()
-    } else {
-      state._pendingKey = e.target.value
-    }
+    state._pendingKey = e.target.value
+    state._pendingVal = ''
+    state.selectedParam = null
+    renderPanel()
   })
 
-  // Param value input — live update without re-render (preserves focus)
+  // Param value input (text/select) — live update without re-render
   panel.querySelector('#param-val')?.addEventListener('input', e => {
     if (state.selectedParam !== null) {
       state.params[state.selectedParam].value = e.target.value
@@ -267,13 +490,77 @@ function attachEvents() {
     }
   })
 
+  // Color swatch — open picker
+  panel.querySelectorAll('.color-swatch').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation()
+      const i = +el.dataset.colorIdx
+      cpop.open(el, el.dataset.color, hex => {
+        const swatch = document.querySelector(`.color-swatch[data-color-idx="${i}"]`)
+        if (swatch) { swatch.style.background = hex; swatch.dataset.color = hex }
+        const colors = [...panel.querySelectorAll('.color-swatch')].map(s => s.dataset.color)
+        const val = JSON.stringify(colors)
+        if (state.selectedParam !== null) {
+          state.params[state.selectedParam].value = val
+          const valEl = panel.querySelector(`[data-param-row="${state.selectedParam}"] .param-row-val`)
+          if (valEl) valEl.textContent = val
+        } else {
+          state._pendingVal = val
+        }
+      })
+    })
+  })
+
+  // Single color param button — open picker
+  panel.querySelector('.param-color-btn')?.addEventListener('click', e => {
+    e.stopPropagation()
+    const btn = e.currentTarget
+    cpop.open(btn, btn.dataset.color, hex => {
+      btn.style.background = hex
+      btn.dataset.color = hex
+      if (state.selectedParam !== null) {
+        state.params[state.selectedParam].value = hex
+        const valEl = panel.querySelector(`[data-param-row="${state.selectedParam}"] .param-row-val`)
+        if (valEl) valEl.textContent = hex
+      } else {
+        state._pendingVal = hex
+      }
+    })
+  })
+
+  // Color swatch — remove
+  panel.querySelectorAll('.color-swatch-remove').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation()
+      cpop.close()
+      const i = +el.dataset.colorIdx
+      const colors = [...panel.querySelectorAll('.color-swatch')].map(s => s.dataset.color)
+      colors.splice(i, 1)
+      const val = JSON.stringify(colors)
+      if (state.selectedParam !== null) state.params[state.selectedParam].value = val
+      else state._pendingVal = val
+      renderPanel()
+    })
+  })
+
+  // Color swatch — add
+  panel.querySelector('#color-add')?.addEventListener('click', () => {
+    const colors = [...panel.querySelectorAll('.color-swatch')].map(s => s.dataset.color)
+    colors.push('#ffffff')
+    const val = JSON.stringify(colors)
+    if (state.selectedParam !== null) state.params[state.selectedParam].value = val
+    else state._pendingVal = val
+    renderPanel()
+  })
+
   // Param add button
   panel.querySelector('#param-add')?.addEventListener('click', () => {
     const key = panel.querySelector('#param-key').value
-    const val = panel.querySelector('#param-val').value
+    const val = readParamValFromDOM(panel)
     if (!key) return
     if (state.params.some(p => p.key === key)) {
       state.selectedParam = state.params.findIndex(p => p.key === key)
+      state._pendingKey = key
       renderPanel()
       return
     }
