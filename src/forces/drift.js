@@ -1,4 +1,4 @@
-export function drift({ maxSpeed = 0.08, minSpeed = 0.015 } = {}) {
+export function drift({ maxSpeed = 0.08, minSpeed = 0.008 } = {}) {
   return (nodes) => {
     for (const node of nodes) {
       const spd = Math.hypot(node.vx, node.vy)
