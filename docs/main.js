@@ -91,3 +91,193 @@ function applyWorld() {
   world = new World({ canvas, autoResize: false, pauseWhenHidden: true, ...config, forces })
   world.start()
 }
+
+// ─── Panel Rendering ──────────────────────────────────────────────────────────
+
+function renderPanel() {
+  const panel = document.getElementById('panel')
+
+  // Forces section
+  const forcesHTML = state.forces.map((f, i) => {
+    const isSelected = state.selectedForce === i
+    const subparamsHTML = isSelected
+      ? `<div class="subparams">${
+          FORCE_DEFS[f.name].map(def => `
+            <div class="subparam-row">
+              <span class="subparam-key">${def.key}</span>
+              <input class="subparam-input"
+                data-force-idx="${i}" data-force-key="${def.key}"
+                value="${f.params[def.key] ?? def.default}" />
+            </div>`).join('')
+        }</div>`
+      : ''
+    return `
+      <button class="chip${isSelected ? ' selected' : ''}" data-force-chip="${i}">
+        ${f.name}<button class="chip-remove" data-force-remove="${i}">✕</button>
+      </button>${subparamsHTML}`
+  }).join('')
+
+  const addForceOptions = Object.keys(FORCE_FNS)
+    .map(n => `<option value="${n}">${n}</option>`).join('')
+
+  // Params section
+  const pendingKey = state.selectedParam !== null ? state.params[state.selectedParam].key : state._pendingKey
+  const pendingVal = state.selectedParam !== null ? state.params[state.selectedParam].value : state._pendingVal
+
+  const paramsListHTML = state.params.map((p, i) => `
+    <div class="param-row${state.selectedParam === i ? ' selected' : ''}" data-param-row="${i}">
+      <span class="param-row-key">${p.key}</span>
+      <div class="param-row-right">
+        <span class="param-row-val">${p.value}</span>
+        <button class="param-remove" data-param-remove="${i}">✕</button>
+      </div>
+    </div>`).join('')
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <span class="panel-title">cosmograph</span>
+      <button class="panel-collapse">${state.panelOpen ? '⊟' : '⊞'}</button>
+    </div>
+    ${state.panelOpen ? `
+      <div class="panel-section">
+        <div class="section-label">Forces</div>
+        <div class="chips">${forcesHTML}</div>
+        <select class="chip-add">
+          <option value="">+ add</option>
+          ${addForceOptions}
+        </select>
+      </div>
+      <div class="panel-section">
+        <div class="section-label">Parameter</div>
+        <div class="param-add-row">
+          <select class="param-key-select" id="param-key">
+            ${PARAM_DEFS.map(k => `<option value="${k}"${k === pendingKey ? ' selected' : ''}>${k}</option>`).join('')}
+          </select>
+          <input class="param-val-input" id="param-val" value="${pendingVal}" placeholder="val" />
+          <button class="param-add-btn" id="param-add">+</button>
+        </div>
+        <div class="param-list">${paramsListHTML}</div>
+      </div>
+      <div class="panel-section">
+        <button class="apply-btn" id="apply-btn">Apply</button>
+      </div>` : ''}
+  `
+
+  attachEvents()
+}
+
+function attachEvents() {
+  const panel = document.getElementById('panel')
+
+  // Collapse toggle
+  panel.querySelector('.panel-collapse')?.addEventListener('click', () => {
+    state.panelOpen = !state.panelOpen
+    panel.classList.toggle('collapsed', !state.panelOpen)
+    renderPanel()
+  })
+
+  if (!state.panelOpen) return
+
+  // Force chip — toggle sub-params
+  panel.querySelectorAll('[data-force-chip]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-force-remove]')) return
+      const i = +el.dataset.forceChip
+      state.selectedForce = state.selectedForce === i ? null : i
+      renderPanel()
+    })
+  })
+
+  // Force chip — remove
+  panel.querySelectorAll('[data-force-remove]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation()
+      const i = +el.dataset.forceRemove
+      state.forces.splice(i, 1)
+      if (state.selectedForce === i) state.selectedForce = null
+      else if (typeof state.selectedForce === 'number' && state.selectedForce > i) state.selectedForce--
+      renderPanel()
+    })
+  })
+
+  // Force add
+  panel.querySelector('.chip-add')?.addEventListener('change', e => {
+    const name = e.target.value
+    if (!name) return
+    state.forces.push({ name, params: {} })
+    e.target.value = ''
+    renderPanel()
+  })
+
+  // Sub-param inputs — update state on change (no re-render needed)
+  panel.querySelectorAll('.subparam-input').forEach(el => {
+    el.addEventListener('change', () => {
+      const i   = +el.dataset.forceIdx
+      const key =  el.dataset.forceKey
+      state.forces[i].params[key] = el.value
+    })
+  })
+
+  // Param row — select / deselect
+  panel.querySelectorAll('[data-param-row]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-param-remove]')) return
+      const i = +el.dataset.paramRow
+      state.selectedParam = state.selectedParam === i ? null : i
+      renderPanel()
+    })
+  })
+
+  // Param row — remove
+  panel.querySelectorAll('[data-param-remove]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation()
+      const i = +el.dataset.paramRemove
+      state.params.splice(i, 1)
+      if (state.selectedParam === i) state.selectedParam = null
+      else if (typeof state.selectedParam === 'number' && state.selectedParam > i) state.selectedParam--
+      renderPanel()
+    })
+  })
+
+  // Param key dropdown
+  panel.querySelector('#param-key')?.addEventListener('change', e => {
+    if (state.selectedParam !== null) {
+      state.params[state.selectedParam].key = e.target.value
+      renderPanel()
+    } else {
+      state._pendingKey = e.target.value
+    }
+  })
+
+  // Param value input — live update without re-render (preserves focus)
+  panel.querySelector('#param-val')?.addEventListener('input', e => {
+    if (state.selectedParam !== null) {
+      state.params[state.selectedParam].value = e.target.value
+      const valEl = panel.querySelector(`[data-param-row="${state.selectedParam}"] .param-row-val`)
+      if (valEl) valEl.textContent = e.target.value
+    } else {
+      state._pendingVal = e.target.value
+    }
+  })
+
+  // Param add button
+  panel.querySelector('#param-add')?.addEventListener('click', () => {
+    const key = panel.querySelector('#param-key').value
+    const val = panel.querySelector('#param-val').value
+    if (!key) return
+    state.params.push({ key, value: val })
+    state.selectedParam = state.params.length - 1
+    state._pendingKey = PARAM_DEFS[0]
+    state._pendingVal = ''
+    renderPanel()
+  })
+
+  // Apply button
+  panel.querySelector('#apply-btn')?.addEventListener('click', applyWorld)
+}
+
+// ─── Bootstrap ────────────────────────────────────────────────────────────────
+
+renderPanel()
+applyWorld()
