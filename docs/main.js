@@ -7,6 +7,7 @@ import {
 
 const FORCE_FNS = { drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wind, nodeRepel, noise, attract }
 
+// Keys must match FORCE_FNS exactly
 const FORCE_DEFS = {
   drift:       [{ key: 'maxSpeed',  default: 0.5 }],
   dampen:      [{ key: 'factor',    default: 0.98 }],
@@ -33,7 +34,7 @@ function parseValue(v) {
   const s = v.trim()
   if (s === 'true')  return true
   if (s === 'false') return false
-  if (s.startsWith('[') || s.startsWith('{')) { try { return JSON.parse(s) } catch {} }
+  if (s.startsWith('[') || s.startsWith('{')) { try { return JSON.parse(s) } catch (e) { console.warn('parseValue: invalid JSON', s) } }
   const n = Number(s)
   if (!isNaN(n) && s !== '') return n
   return s
