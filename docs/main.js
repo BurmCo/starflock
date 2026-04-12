@@ -64,6 +64,9 @@ const state = {
 const canvas = document.getElementById('canvas')
 let world = null
 
+canvas.width  = Math.round(canvas.clientWidth  * devicePixelRatio)
+canvas.height = Math.round(canvas.clientHeight * devicePixelRatio)
+
 const ro = new ResizeObserver(() => {
   canvas.width  = Math.round(canvas.clientWidth  * devicePixelRatio)
   canvas.height = Math.round(canvas.clientHeight * devicePixelRatio)
@@ -79,7 +82,7 @@ function applyWorld() {
     const params = {}
     for (const def of FORCE_DEFS[f.name]) {
       if (f.params[def.key] !== undefined) {
-        params[def.key] = parseValue(String(f.params[def.key]))
+        params[def.key] = parseValue(f.params[def.key])
       }
     }
     return FORCE_FNS[f.name](params)
