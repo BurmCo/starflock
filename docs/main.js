@@ -86,7 +86,7 @@ function applyWorld() {
   const config = Object.fromEntries(
     state.params.map(p => [p.key, parseValue(p.value)])
   )
-  const forces = state.forces.map(f => {
+  const forces = state.forces.filter(f => FORCE_DEFS[f.name]).map(f => {
     const params = {}
     for (const def of FORCE_DEFS[f.name]) {
       if (f.params[def.key] !== undefined) {
@@ -110,7 +110,7 @@ function renderPanel() {
     const isSelected = state.selectedForce === i
     const subparamsHTML = isSelected
       ? `<div class="subparams">${
-          FORCE_DEFS[f.name].map(def => `
+          (FORCE_DEFS[f.name] ?? []).map(def => `
             <div class="subparam-row">
               <span class="subparam-key">${def.key}</span>
               <input class="subparam-input"
@@ -121,7 +121,7 @@ function renderPanel() {
       : ''
     return `
       <button class="chip${isSelected ? ' selected' : ''}" data-force-chip="${i}">
-        ${f.name}<button class="chip-remove" data-force-remove="${i}">✕</button>
+        ${esc(f.name)}<button class="chip-remove" data-force-remove="${i}">✕</button>
       </button>${subparamsHTML}`
   }).join('')
 
