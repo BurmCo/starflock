@@ -40,6 +40,14 @@ function parseValue(v) {
   return s
 }
 
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 const state = {
@@ -107,7 +115,7 @@ function renderPanel() {
               <span class="subparam-key">${def.key}</span>
               <input class="subparam-input"
                 data-force-idx="${i}" data-force-key="${def.key}"
-                value="${f.params[def.key] ?? def.default}" />
+                value="${esc(f.params[def.key] ?? def.default)}" />
             </div>`).join('')
         }</div>`
       : ''
@@ -128,7 +136,7 @@ function renderPanel() {
     <div class="param-row${state.selectedParam === i ? ' selected' : ''}" data-param-row="${i}">
       <span class="param-row-key">${p.key}</span>
       <div class="param-row-right">
-        <span class="param-row-val">${p.value}</span>
+        <span class="param-row-val">${esc(p.value)}</span>
         <button class="param-remove" data-param-remove="${i}">✕</button>
       </div>
     </div>`).join('')
@@ -153,7 +161,7 @@ function renderPanel() {
           <select class="param-key-select" id="param-key">
             ${PARAM_DEFS.map(k => `<option value="${k}"${k === pendingKey ? ' selected' : ''}>${k}</option>`).join('')}
           </select>
-          <input class="param-val-input" id="param-val" value="${pendingVal}" placeholder="val" />
+          <input class="param-val-input" id="param-val" value="${esc(pendingVal)}" placeholder="val" />
           <button class="param-add-btn" id="param-add">+</button>
         </div>
         <div class="param-list">${paramsListHTML}</div>
@@ -172,7 +180,6 @@ function attachEvents() {
   // Collapse toggle
   panel.querySelector('.panel-collapse')?.addEventListener('click', () => {
     state.panelOpen = !state.panelOpen
-    panel.classList.toggle('collapsed', !state.panelOpen)
     renderPanel()
   })
 
@@ -205,7 +212,6 @@ function attachEvents() {
     const name = e.target.value
     if (!name) return
     state.forces.push({ name, params: {} })
-    e.target.value = ''
     renderPanel()
   })
 
@@ -266,6 +272,11 @@ function attachEvents() {
     const key = panel.querySelector('#param-key').value
     const val = panel.querySelector('#param-val').value
     if (!key) return
+    if (state.params.some(p => p.key === key)) {
+      state.selectedParam = state.params.findIndex(p => p.key === key)
+      renderPanel()
+      return
+    }
     state.params.push({ key, value: val })
     state.selectedParam = state.params.length - 1
     state._pendingKey = PARAM_DEFS[0]
