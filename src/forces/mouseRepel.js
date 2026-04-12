@@ -24,7 +24,7 @@ export function mouseRepel({ mode = 'repel', radius = 120, strength = 0.012, fn 
       const dx = node.x - mouse.x
       const dy = node.y - mouse.y
       const dist = Math.hypot(dx, dy)
-      if (dist >= radius || dist === 0) continue
+      if (dist >= radius || dist < 1e-6) continue
 
       const t = (radius - dist) / radius // 0..1, stronger near center
 

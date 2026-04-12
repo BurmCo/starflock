@@ -107,8 +107,8 @@ export declare class World {
 
 // Forces
 export interface DriftOptions {
-  speed?: number
-  chaos?: number
+  maxSpeed?: number
+  minSpeed?: number
 }
 export declare function drift(opts?: DriftOptions): Force
 
@@ -126,7 +126,8 @@ export declare function twinkle(opts?: TwinkleOptions): Force
 export interface MouseRepelOptions {
   radius?: number
   strength?: number
-  mode?: 'repel' | 'attract'
+  mode?: 'repel' | 'attract' | 'orbit' | 'custom'
+  fn?: (node: Node, mouse: { x: number; y: number }, context: ForceContext) => void
 }
 export declare function mouseRepel(opts?: MouseRepelOptions): Force
 
@@ -146,8 +147,8 @@ export declare function gravity(opts?: GravityOptions): Force
 
 export interface WindOptions {
   angle?: number
-  speed?: number
-  turbulence?: number
+  strength?: number
+  gust?: number
 }
 export declare function wind(opts?: WindOptions): Force
 

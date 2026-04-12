@@ -16,7 +16,7 @@ export function nodeRepel({ radius = 60, strength = 0.002 } = {}) {
         const dx = a.x - b.x
         const dy = a.y - b.y
         const dist = Math.hypot(dx, dy)
-        if (dist >= radius || dist === 0) continue
+        if (dist >= radius || dist < 1e-6) continue
 
         const t = (radius - dist) / radius // 1 at center, 0 at edge
         const f = t * strength / dist
