@@ -3,133 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cosmograph — config playground</title>
+  <title>cosmograph</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0c0b; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; }
 
-    body {
-      background: #0a0c0b;
+    #panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 224px;
+      background: rgba(10,12,11,0.92);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      font-family: 'Fragment Mono', monospace;
+      font-size: 11px;
       color: #e8e4dc;
-      font-family: 'Fragment Mono', monospace, monospace;
-      padding: 32px;
+      z-index: 10;
+      user-select: none;
     }
 
-    h1 {
-      font-family: sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      color: #5DCAA5;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 32px;
-    }
-
-    h1 span { color: #4a4845; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-
-    .card {
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 12px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.02);
-    }
-
-    .card canvas {
-      display: block;
-      width: 100%;
-      height: 60vh;
-    }
-
-    .card-info {
-      padding: 14px 16px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .card-title {
-      font-size: 12px;
-      color: #e8e4dc;
-      margin-bottom: 6px;
-      font-family: sans-serif;
-      font-weight: 600;
-    }
-
-    .card-config {
-      font-size: 10px;
-      color: #4a4845;
-      line-height: 1.7;
-      white-space: pre;
-    }
-
-    .card-config .key { color: #5DCAA5; }
-    .card-config .val { color: #F0997B; }
-
-    .canvas-wrap {
-      position: relative;
-    }
-
-    .scroll-toggle {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
+    .panel-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(10,12,11,0.75);
-      backdrop-filter: blur(8px);
-      font-size: 10px;
-      color: #4a4845;
-      cursor: pointer;
-      user-select: none;
-      transition: border-color 0.2s, color 0.2s;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
+    .panel-title { color: #5DCAA5; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+    .panel-collapse { background: none; border: none; color: #4a4845; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; font-family: inherit; }
+    .panel-collapse:hover { color: #e8e4dc; }
 
-    .scroll-toggle:hover {
-      border-color: rgba(255,255,255,0.2);
-      color: #8a8880;
+    .panel-section { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .panel-section:last-child { border-bottom: none; }
+    .section-label { font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: #4a4845; margin-bottom: 8px; }
+
+    /* Forces */
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #1e2a20; border-radius: 12px; padding: 3px 8px;
+      color: #5DCAA5; cursor: pointer; border: 1px solid transparent;
+      font-family: inherit; font-size: 10px; transition: border-color 0.15s;
     }
+    .chip:hover { border-color: rgba(93,202,165,0.3); }
+    .chip.selected { border-color: #5DCAA5; }
+    .chip-remove { color: #3a4a3e; font-size: 11px; line-height: 1; }
+    .chip-remove:hover { color: #e8e4dc; }
 
-    .scroll-toggle.active {
-      border-color: #3B6D11;
-      color: #5DCAA5;
+    .chip-add {
+      background: #161a18; color: #4a4845;
+      border: 1px solid rgba(255,255,255,0.07);
+      appearance: none; cursor: pointer;
+      padding: 3px 8px; border-radius: 12px;
+      font-family: inherit; font-size: 10px;
     }
+    .chip-add:hover { color: #5DCAA5; border-color: rgba(93,202,165,0.2); }
 
-    .scroll-toggle.active:hover {
-      background: rgba(59,109,17,0.15);
+    .subparams { background: rgba(0,0,0,0.3); border-radius: 5px; padding: 8px; margin-top: 4px; }
+    .subparam-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .subparam-row:last-child { margin-bottom: 0; }
+    .subparam-key { color: #4a4845; }
+    .subparam-input {
+      background: #1a1f1c; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 3px; padding: 2px 6px; color: #F0997B;
+      width: 70px; font-family: inherit; font-size: 10px; text-align: right;
     }
+    .subparam-input:focus { outline: none; border-color: rgba(93,202,165,0.3); }
 
-    /* pip */
-    .scroll-toggle::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #4a4845;
-      transition: background 0.2s;
-      flex-shrink: 0;
+    /* Params */
+    .param-add-row { display: flex; gap: 4px; align-items: center; margin-bottom: 8px; }
+    .param-key-select {
+      flex: 1; background: #161a18; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px; padding: 4px 6px; color: #F0997B;
+      font-family: inherit; font-size: 10px; appearance: none; cursor: pointer;
     }
-
-    .scroll-toggle.active::before { background: #5DCAA5; }
-
-    /* direction hint shown when active+hovered */
-    .scroll-toggle .hint {
-      display: none;
-      color: #F0997B;
-      margin-left: 2px;
+    .param-key-select:focus { outline: none; border-color: rgba(93,202,165,0.3); }
+    .param-val-input {
+      width: 52px; background: #161a18; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 4px; padding: 4px 6px; color: #e8e4dc;
+      font-family: inherit; font-size: 10px; text-align: right;
     }
-    .scroll-toggle.active:hover .hint { display: inline; }
+    .param-val-input:focus { outline: none; border-color: rgba(93,202,165,0.3); }
+    .param-add-btn { background: none; border: none; color: #5DCAA5; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; font-family: inherit; }
+    .param-add-btn:hover { color: #7dd9b5; }
+
+    .param-list { display: flex; flex-direction: column; }
+    .param-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 5px; border-radius: 3px; cursor: pointer; margin-bottom: 1px; }
+    .param-row:hover { background: rgba(255,255,255,0.03); }
+    .param-row.selected { background: rgba(240,153,123,0.08); }
+    .param-row-key { color: #e8e4dc; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .param-row.selected .param-row-key { color: #F0997B; }
+    .param-row-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .param-row-val { color: #4a4845; }
+    .param-row.selected .param-row-val { color: #F0997B; }
+    .param-remove { color: #2e3330; font-size: 13px; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; line-height: 1; }
+    .param-remove:hover { color: #e8e4dc; }
+
+    /* Apply */
+    .apply-btn {
+      display: block; width: 100%; background: #1e2a20;
+      border: 1px solid rgba(93,202,165,0.15); border-radius: 5px;
+      padding: 8px; text-align: center; color: #5DCAA5;
+      font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
+    }
+    .apply-btn:hover { background: rgba(93,202,165,0.12); border-color: rgba(93,202,165,0.3); }
+    .apply-btn:active { background: rgba(93,202,165,0.2); }
   </style>
 </head>
 <body>
-  <h1>cosmograph <span>//</span> config playground</h1>
-  <div class="grid" id="grid"></div>
+  <canvas id="canvas"></canvas>
+  <div id="panel"></div>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
