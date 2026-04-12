@@ -1,5 +1,7 @@
 # cosmograph
 
+[![npm](https://img.shields.io/npm/v/cosmograph)](https://www.npmjs.com/package/cosmograph)
+
 Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.
 
 ```
