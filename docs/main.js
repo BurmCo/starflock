@@ -121,7 +121,7 @@ function renderPanel() {
       : ''
     return `
       <button class="chip${isSelected ? ' selected' : ''}" data-force-chip="${i}">
-        ${esc(f.name)}<button class="chip-remove" data-force-remove="${i}">✕</button>
+        ${esc(f.name)}<span class="chip-remove" data-force-remove="${i}">✕</span>
       </button>${subparamsHTML}`
   }).join('')
 
