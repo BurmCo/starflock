@@ -39,3 +39,52 @@ function parseValue(v) {
   if (!isNaN(n) && s !== '') return n
   return s
 }
+
+// ─── State ────────────────────────────────────────────────────────────────────
+
+const state = {
+  forces: [
+    { name: 'drift',      params: {} },
+    { name: 'dampen',     params: {} },
+    { name: 'twinkle',    params: {} },
+    { name: 'mouseRepel', params: {} },
+  ],
+  params: [
+    { key: 'nodeCount', value: '60' },
+  ],
+  selectedForce: null,  // number | null — index into forces[]
+  selectedParam: null,  // number | null — index into params[]
+  panelOpen: true,
+  _pendingKey: PARAM_DEFS[0],  // key staged in dropdown when nothing selected
+  _pendingVal: '',              // value staged in input when nothing selected
+}
+
+// ─── World Management ─────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('canvas')
+let world = null
+
+const ro = new ResizeObserver(() => {
+  canvas.width  = Math.round(canvas.clientWidth  * devicePixelRatio)
+  canvas.height = Math.round(canvas.clientHeight * devicePixelRatio)
+  world?.resize()
+})
+ro.observe(canvas)
+
+function applyWorld() {
+  const config = Object.fromEntries(
+    state.params.map(p => [p.key, parseValue(p.value)])
+  )
+  const forces = state.forces.map(f => {
+    const params = {}
+    for (const def of FORCE_DEFS[f.name]) {
+      if (f.params[def.key] !== undefined) {
+        params[def.key] = parseValue(String(f.params[def.key]))
+      }
+    }
+    return FORCE_FNS[f.name](params)
+  })
+  world?.destroy()
+  world = new World({ canvas, autoResize: false, pauseWhenHidden: true, ...config, forces })
+  world.start()
+}
