@@ -49,9 +49,12 @@ export interface ForceContext {
 
 export type Force = (nodes: Node[], context: ForceContext) => void
 
+export type Layout = (width: number, height: number) => Array<{ x: number; y: number }>
+
 export interface WorldOptions {
   canvas: HTMLCanvasElement
   forces?: Force[]
+  layout?: Layout | Layout[]
   // Nodes
   nodeCount?: number
   nodeSize?: number | [number, number]
