@@ -50,11 +50,11 @@ world.start()
 ## React
 
 ```jsx
-import { useCosmograph } from 'starflock/react'
+import { useStarflock } from 'starflock/react'
 import { drift, dampen, twinkle, mouseRepel } from 'starflock'
 
 export default function Background() {
-  const ref = useCosmograph({
+  const ref = useStarflock({
     nodeCount: 60,
     colors: ['#ffffff', '#cce8ff'],
     forces: [twinkle(), mouseRepel(), dampen(), drift()],
