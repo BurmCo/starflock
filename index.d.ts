@@ -180,3 +180,28 @@ export declare function attract(opts?: AttractOptions): Force
 
 // React adapter
 export declare function useStarflock(options?: Omit<WorldOptions, 'canvas'>): import('react').RefObject<HTMLCanvasElement>
+
+// Layouts namespace
+export declare namespace layouts {
+  function ring(opts?: {
+    count?: number
+    radius?: number
+    cx?: number
+    cy?: number
+  }): Layout
+
+  function constellation(
+    name: 'orion' | 'big-dipper',
+    opts?: {
+      scale?: number
+      cx?: number
+      cy?: number
+    }
+  ): Layout
+}
+
+// Presets namespace
+export declare namespace presets {
+  function orion(overrides?: Partial<WorldOptions>): Partial<WorldOptions>
+  function bigDipper(overrides?: Partial<WorldOptions>): Partial<WorldOptions>
+}
