@@ -13,8 +13,8 @@ export function orion(overrides = {}) {
     layout: constellation('orion'),
     colors: ['#ffffff', '#aad4ff', '#ffd2aa'],
     nodeSize: [1.5, 3.5],
-    edgeMaxDist: 120,
-    edgeMaxOpacity: 0.25,
+    edgeMaxDist: 9999,
+    edgeMaxOpacity: 0.45,
     ...overrides,
   }
 }
@@ -24,8 +24,8 @@ export function bigDipper(overrides = {}) {
     layout: constellation('big-dipper'),
     colors: ['#ffffff', '#cce8ff', '#e8f4ff'],
     nodeSize: [1.5, 3],
-    edgeMaxDist: 130,
-    edgeMaxOpacity: 0.22,
+    edgeMaxDist: 9999,
+    edgeMaxOpacity: 0.4,
     ...overrides,
   }
 }
