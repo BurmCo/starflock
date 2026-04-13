@@ -139,13 +139,22 @@ export class World {
   }
 
   _createNodes() {
-    const { width, height } = this.canvas
-    const opts = this.options
-    const { nodeCount, nodeSize, colors, nodeColorMode, nodeSpawnRegion, nodeRotation } = opts
+    const width  = this._logicalWidth  ?? this.canvas.width
+    const height = this._logicalHeight ?? this.canvas.height
+    const opts   = this.options
+    const { nodeSize, colors, nodeColorMode, nodeSpawnRegion, nodeRotation } = opts
     const [minR, maxR] = Array.isArray(nodeSize) ? nodeSize : [nodeSize, nodeSize]
 
-    const rawNodes = Array.from({ length: nodeCount }, (_, i) => {
-      const pos = spawnPosition(nodeSpawnRegion, width, height)
+    let positions = null
+    if (opts.layout) {
+      const fns = Array.isArray(opts.layout) ? opts.layout : [opts.layout]
+      positions = fns.flatMap(fn => fn(width, height))
+    }
+
+    const count = positions ? positions.length : opts.nodeCount
+
+    const rawNodes = Array.from({ length: count }, (_, i) => {
+      const pos = positions ? positions[i] : spawnPosition(nodeSpawnRegion, width, height)
       const r = this._sampleNodeRadius(minR, maxR)
       const node = new Node({
         x: pos.x,
