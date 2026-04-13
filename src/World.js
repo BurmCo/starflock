@@ -21,6 +21,7 @@ function hexToRgb(hex) {
 }
 
 function lerpColor(colors, t) {
+  if (colors.length === 0) return '#ffffff'
   if (colors.length === 1) return colors[0]
   const scaled = Math.max(0, Math.min(1, t)) * (colors.length - 1)
   const i = Math.min(Math.floor(scaled), colors.length - 2)
@@ -110,6 +111,7 @@ export class World {
     this.ctx = canvas.getContext('2d')
     this.forces = forces
     this.options = { ...DEFAULTS, ...options }
+    this._edgeColorsExplicit = !!options.edgeColors
     if (!this.options.edgeColors) {
       this.options.edgeColors = this.options.colors
     }
@@ -118,6 +120,7 @@ export class World {
     this.raf = null
     this.mouse = null
     this.scrollY = 0
+    this._started = false
     this._hoveredNode = null
 
     this._onMouseMove = this._onMouseMove.bind(this)
@@ -221,8 +224,10 @@ export class World {
       my = e.clientY + window.scrollY
     } else {
       const rect = this.canvas.getBoundingClientRect()
-      mx = e.clientX - rect.left
-      my = e.clientY - rect.top
+      const scaleX = this.canvas.width / rect.width
+      const scaleY = this.canvas.height / rect.height
+      mx = (e.clientX - rect.left) * scaleX
+      my = (e.clientY - rect.top) * scaleY
     }
     this.mouse = { x: mx, y: my }
 
@@ -266,8 +271,10 @@ export class World {
       my = e.clientY + window.scrollY
     } else {
       const rect = this.canvas.getBoundingClientRect()
-      mx = e.clientX - rect.left
-      my = e.clientY - rect.top
+      const scaleX = this.canvas.width / rect.width
+      const scaleY = this.canvas.height / rect.height
+      mx = (e.clientX - rect.left) * scaleX
+      my = (e.clientY - rect.top) * scaleY
     }
     for (const node of this.nodes) {
       if (Math.hypot(node.x - mx, node.y - my) < node.r * 3) {
@@ -283,15 +290,18 @@ export class World {
 
   update(newOptions) {
     Object.assign(this.options, newOptions)
-    if (newOptions.colors && !newOptions.edgeColors) {
+    if (newOptions.colors && !newOptions.edgeColors && !this._edgeColorsExplicit) {
       this.options.edgeColors = newOptions.colors
+    }
+    if (newOptions.edgeColors) {
+      this._edgeColorsExplicit = true
     }
     if (newOptions.forces !== undefined) {
       this.forces = newOptions.forces
     }
   }
 
-  _resolveEdgeColor(ctx, a, b, i, j, edgeColors) {
+  _resolveEdgeColor(a, b, i, j, edgeColors) {
     const mode = this.options.edgeColorMode
     if (typeof mode === 'function') return mode(a, b, i, j)
     if (mode === 'source') return a.color
@@ -305,7 +315,7 @@ export class World {
     if (dist >= edgeMaxDist) return false
 
     const opacity = (1 - dist / edgeMaxDist) * edgeMaxOpacity
-    const color = this._resolveEdgeColor(ctx, a, b, i, j, edgeColors)
+    const color = this._resolveEdgeColor(a, b, i, j, edgeColors)
 
     ctx.beginPath()
     ctx.moveTo(a.x, a.y)
@@ -352,29 +362,31 @@ export class World {
 
     if (opts.edgeStyle === 'dashed') ctx.setLineDash([4, 6])
 
-    if (spatialIndex) {
-      const qt = new QuadTree(-1, -1, width + 2, height + 2)
-      for (const node of nodes) qt.insert(node)
+    mainPass: {
+      if (spatialIndex) {
+        const qt = new QuadTree(-1, -1, width + 2, height + 2)
+        for (const node of nodes) qt.insert(node)
 
-      for (let i = 0; i < nodes.length; i++) {
-        if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) return
-        if (edgeCounts && maxEdgesPerNode !== null && edgeCounts[i] >= maxEdgesPerNode) continue
-        const a = nodes[i]
-        const candidates = qt.queryRadius(a.x, a.y, edgeMaxDist)
-        for (const b of candidates) {
-          const j = b._index
-          if (j <= i) continue
-          if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) return
-          if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
-          if (this._drawEdge(ctx, a, b, i, j, opts, edgeCounts)) totalEdges++
+        for (let i = 0; i < nodes.length; i++) {
+          if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+          if (edgeCounts && maxEdgesPerNode !== null && edgeCounts[i] >= maxEdgesPerNode) continue
+          const a = nodes[i]
+          const candidates = qt.queryRadius(a.x, a.y, edgeMaxDist)
+          for (const b of candidates) {
+            const j = b._index
+            if (j <= i) continue
+            if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+            if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
+            if (this._drawEdge(ctx, a, b, i, j, opts, edgeCounts)) totalEdges++
+          }
         }
-      }
-    } else {
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) return
-          if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
-          if (this._drawEdge(ctx, nodes[i], nodes[j], i, j, opts, edgeCounts)) totalEdges++
+      } else {
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+            if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
+            if (this._drawEdge(ctx, nodes[i], nodes[j], i, j, opts, edgeCounts)) totalEdges++
+          }
         }
       }
     }
@@ -494,6 +506,8 @@ export class World {
   }
 
   start() {
+    if (this._started) return
+    this._started = true
     this._resize()
     window.addEventListener('resize', this._onResize)
     window.addEventListener('mousemove', this._onMouseMove)
@@ -522,6 +536,7 @@ export class World {
   }
 
   stop() {
+    this._started = false
     cancelAnimationFrame(this.raf)
     this.raf = null
     if (this._io) { this._io.disconnect(); this._io = null }

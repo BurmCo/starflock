@@ -24,6 +24,8 @@ export declare class Node {
   angle?: number
   angularVelocity?: number
   shape?: string | ShapeFn
+  /** @internal assigned by World for spatial index lookups */
+  _index: number
   constructor(opts: NodeOptions)
 }
 
@@ -174,4 +176,4 @@ export interface AttractOptions {
 export declare function attract(opts?: AttractOptions): Force
 
 // React adapter
-export declare function useCosmograph(options?: Omit<WorldOptions, 'canvas'>): React.RefObject<HTMLCanvasElement>
+export declare function useStarflock(options?: Omit<WorldOptions, 'canvas'>): import('react').RefObject<HTMLCanvasElement>

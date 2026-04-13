@@ -9,5 +9,6 @@ export class Node {
     this.phase = phase
     this.twinkleSpeed = twinkleSpeed
     this.brightness = 1
+    this._index = 0
   }
 }

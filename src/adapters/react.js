@@ -8,10 +8,10 @@ import { World } from '../World.js'
  * All World options are supported as props.
  *
  * Example:
- *   const ref = useCosmograph({ nodeCount: 60, colors: ['#fff'], forces: [drift()] })
+ *   const ref = useStarflock({ nodeCount: 60, colors: ['#fff'], forces: [drift()] })
  *   return <canvas ref={ref} style={{ width: '100%', height: '100%' }} />
  */
-export function useCosmograph(options = {}) {
+export function useStarflock(options = {}) {
   const canvasRef = useRef(null)
   const worldRef = useRef(null)
 

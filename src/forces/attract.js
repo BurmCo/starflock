@@ -11,8 +11,8 @@
 export function attract({ x = 0.5, y = 0.5, radius = 200, strength = 0.001 } = {}) {
   return (nodes, context) => {
     const { width, height } = context
-    const tx = typeof x === 'function' ? x(width, height) : (x <= 1 ? x * width : x)
-    const ty = typeof y === 'function' ? y(width, height) : (y <= 1 ? y * height : y)
+    const tx = typeof x === 'function' ? x(width, height) : (x >= 0 && x <= 1 ? x * width : x)
+    const ty = typeof y === 'function' ? y(width, height) : (y >= 0 && y <= 1 ? y * height : y)
 
     for (const node of nodes) {
       const dx = tx - node.x
