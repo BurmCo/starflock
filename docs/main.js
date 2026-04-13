@@ -18,7 +18,7 @@ const FORCE_DEFS = {
   nodeRepel:   [{ key: 'radius',    default: 40,     hint: '10 – 150' },  { key: 'strength', default: 0.003, hint: '0.001 – 0.02' }],
   noise:       [{ key: 'scale',     default: 0.004,  hint: '0.001 – 0.02' }, { key: 'strength', default: 0.001, hint: '0.0001 – 0.005' }, { key: 'speed', default: 0.0003, hint: '0.0001 – 0.002' }],
   attract:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'radius', default: 250, hint: '50 – 500' }, { key: 'strength', default: 0.003, hint: '0.0005 – 0.01' }],
-  scrollDrift: [{ key: 'mode',     default: 'wave',  options: ['wave', 'shift'] }, { key: 'strength', default: 8, hint: '1 – 30' }],
+  scrollDrift: [{ key: 'mode',     default: 'rotate', options: ['rotate', 'wave', 'scatter'] }, { key: 'strength', default: 1, hint: '0.1 – 5' }],
 }
 
 const FORCE_DESCS = {
@@ -54,7 +54,7 @@ const PARAM_DESCS = {
   edgeMaxDist:         { desc: 'Maximum distance between nodes for an edge to be drawn.',               hint: '50 – 300' },
   edgeMaxOpacity:      { desc: 'Opacity of edges at their closest point.',                             hint: '0.0 – 1.0' },
   edgeWidth:           { desc: 'Stroke width of edges in canvas pixels.',                              hint: '0.5 – 5' },
-  edgeStyle:           { desc: 'Rendering style of edges.',                                            options: ['solid', 'dashed'] },
+  edgeStyle:           { desc: 'Rendering style of edges.',                                            options: ['solid', 'dashed', 'gradient'] },
   edgeCurvature:       { desc: 'How much edges bow between nodes (0 = straight).',                     hint: '0.0 – 1.0' },
   edgeColors:          { desc: 'Array of hex colours for edges. Defaults to node colours if omitted.', isColorArray: true },
   edgeColorMode:       { desc: 'Which node colour is used to tint each edge.',                         options: ['alternate', 'source', 'target'] },
@@ -64,7 +64,7 @@ const PARAM_DESCS = {
   blendMode:           { desc: 'Canvas globalCompositeOperation for node rendering.',                  options: ['source-over', 'lighter', 'screen', 'multiply', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity', 'xor'] },
   glowOpacity:         { desc: 'Opacity of the soft bloom drawn around each node.',                   hint: '0.0 – 1.0' },
   glowScale:           { desc: 'How large the bloom halo is relative to the node.',                   hint: '1.0 – 6.0' },
-  glowThreshold:       { desc: 'Minimum node brightness before glow is applied.',                     hint: '0.0 – 1.0' },
+  glowThreshold:       { desc: 'Minimum node radius (px) before bloom halo is drawn.',               hint: '0.5 – 5' },
   background:          { desc: 'Canvas background colour.',                                            isColor: true },
 }
 
@@ -133,16 +133,6 @@ const state = {
 const canvas = document.getElementById('canvas')
 let world = null
 
-canvas.width  = Math.round(canvas.clientWidth  * devicePixelRatio)
-canvas.height = Math.round(canvas.clientHeight * devicePixelRatio)
-
-const ro = new ResizeObserver(() => {
-  canvas.width  = Math.round(canvas.clientWidth  * devicePixelRatio)
-  canvas.height = Math.round(canvas.clientHeight * devicePixelRatio)
-  world?.resize()
-})
-ro.observe(canvas)
-
 function applyWorld() {
   const config = Object.fromEntries(
     state.params.map(p => [p.key, parseValue(p.value)])
@@ -157,7 +147,7 @@ function applyWorld() {
     return FORCE_FNS[f.name](params)
   })
   world?.stop()
-  world = new World({ canvas, autoResize: false, pauseWhenHidden: true, ...config, forces })
+  world = new World({ canvas, pauseWhenHidden: true, ...config, forces })
   world.start()
 }
 
@@ -360,7 +350,7 @@ function renderPanel() {
 
   panel.innerHTML = `
     <div class="panel-header">
-      <span class="panel-title">cosmograph</span>
+      <span class="panel-title">starflock</span>
       <button class="panel-collapse">${state.panelOpen ? '⊟' : '⊞'}</button>
     </div>
     ${state.panelOpen ? `
