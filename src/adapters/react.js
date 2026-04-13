@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { World } from '../World.js'
 
 /**
- * useCosmograph — React hook for cosmograph
+ * useStarflock — React hook for starflock
  *
  * Returns a canvasRef to attach to a <canvas> element.
  * All World options are supported as props.

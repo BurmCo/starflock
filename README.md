@@ -1,11 +1,11 @@
-# cosmograph
+# starflock
 
-[![npm](https://img.shields.io/npm/v/cosmograph)](https://www.npmjs.com/package/cosmograph)
+[![npm](https://img.shields.io/npm/v/starflock)](https://www.npmjs.com/package/starflock)
 
 Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.
 
 ```
-npm install cosmograph
+npm install starflock
 ```
 
 ---
@@ -13,7 +13,7 @@ npm install cosmograph
 ## Quick start
 
 ```js
-import { World, drift, dampen, twinkle, mouseRepel } from 'cosmograph'
+import { World, drift, dampen, twinkle, mouseRepel } from 'starflock'
 
 const world = new World({
   canvas: document.getElementById('bg'),
@@ -50,8 +50,8 @@ world.start()
 ## React
 
 ```jsx
-import { useCosmograph } from 'cosmograph/react'
-import { drift, dampen, twinkle, mouseRepel } from 'cosmograph'
+import { useCosmograph } from 'starflock/react'
+import { drift, dampen, twinkle, mouseRepel } from 'starflock'
 
 export default function Background() {
   const ref = useCosmograph({
@@ -269,7 +269,7 @@ window.addEventListener('scroll', () => { world.scrollY = window.scrollY })
 Custom shape function: `(ctx, x, y, r) => void`
 
 ```js
-import { World } from 'cosmograph'
+import { World } from 'starflock'
 
 function triangle(ctx, x, y, r) {
   ctx.beginPath()

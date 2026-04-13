@@ -1,4 +1,4 @@
-// cosmograph — canvas particle library
+// starflock — canvas particle library
 
 export interface NodeOptions {
   x: number

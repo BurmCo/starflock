@@ -1,5 +1,5 @@
 {
-  "name": "cosmograph",
+  "name": "starflock",
   "version": "0.2.3",
   "description": "Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.",
   "keywords": ["canvas", "particles", "animation", "constellation", "webgl", "background", "force", "interactive"],
@@ -20,11 +20,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BurmCo/cosmograph.git"
+    "url": "git+https://github.com/BurmCo/starflock.git"
   },
-  "homepage": "https://github.com/BurmCo/cosmograph#readme",
+  "homepage": "https://github.com/BurmCo/starflock#readme",
   "bugs": {
-    "url": "https://github.com/BurmCo/cosmograph/issues"
+    "url": "https://github.com/BurmCo/starflock/issues"
   },
   "sideEffects": false
 }
