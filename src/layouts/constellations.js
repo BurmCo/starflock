@@ -65,5 +65,5 @@ export function constellation(name, { scale = 0.7, cx = 0.5, cy = 0.5 } = {}) {
 export function constellationEdges(name) {
   const edges = EDGES[name]
   if (!edges) throw new Error(`starflock: unknown constellation "${name}"`)
-  return edges
+  return [...edges]
 }
