@@ -97,6 +97,7 @@ const EDGES = {
     [1, 2], // eta–algieba
     [2, 3], // algieba–adhafera
     [3, 4], // adhafera–mu (top of sickle)
+    [4, 2], // mu→algieba — closes the hook (reversed question-mark shape)
     [0, 6], // regulus–theta (back)
     [6, 5], // theta–denebola (tail)
   ],

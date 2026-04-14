@@ -69,7 +69,7 @@ const DEFAULTS = {
   maxEdgesPerNode: null,
   minEdgesPerNode: null,
   edgeCurvature: 0,
-  edges: null,
+  edges: null,           // Array<[i,j]> — predefined pairs; null = distance-based
 
   // Node shape
   nodeShape: 'circle',
@@ -324,7 +324,7 @@ export class World {
     const dist = Math.hypot(a.x - b.x, a.y - b.y)
     if (dist >= edgeMaxDist) return false
 
-    const opacity = (1 - dist / edgeMaxDist) * edgeMaxOpacity
+    const opacity = edgeMaxDist === Infinity ? edgeMaxOpacity : (1 - dist / edgeMaxDist) * edgeMaxOpacity
     const color = this._resolveEdgeColor(a, b, i, j, edgeColors)
 
     ctx.beginPath()
