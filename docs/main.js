@@ -308,26 +308,27 @@ function renderPanel() {
   const panel = document.getElementById('panel')
 
   // Forces section
-  const forcesHTML = state.forces.map((f, i) => {
+  const chipsHTML = state.forces.map((f, i) => {
     const isSelected = state.selectedForce === i
-    const subparamsHTML = isSelected
-      ? `<div class="subparams">${
-          FORCE_DESCS[f.name]
-            ? `<div class="info-box">${esc(FORCE_DESCS[f.name])}</div>`
-            : ''
-        }${
-          (FORCE_DEFS[f.name] ?? []).map(def => `
-            <div class="subparam-row">
-              <span class="subparam-key">${def.key}${def.hint ? `<span class="info-hint">${esc(def.hint)}</span>` : ''}</span>
-              ${subparamInputHTML(def, i, f)}
-            </div>`).join('')
-        }</div>`
-      : ''
-    return `
-      <button class="chip${isSelected ? ' selected' : ''}" data-force-chip="${i}">
-        ${esc(f.name)}<span class="chip-remove" data-force-remove="${i}">✕</span>
-      </button>${subparamsHTML}`
+    return `<button class="chip${isSelected ? ' selected' : ''}" data-force-chip="${i}">
+      ${esc(f.name)}<span class="chip-remove" data-force-remove="${i}">✕</span>
+    </button>`
   }).join('')
+
+  const sf = state.selectedForce !== null ? state.forces[state.selectedForce] : null
+  const forceSubparamsHTML = sf
+    ? `<div class="subparams">${
+        FORCE_DESCS[sf.name]
+          ? `<div class="info-box">${esc(FORCE_DESCS[sf.name])}</div>`
+          : ''
+      }${
+        (FORCE_DEFS[sf.name] ?? []).map(def => `
+          <div class="subparam-row">
+            <span class="subparam-key">${def.key}${def.hint ? `<span class="info-hint">${esc(def.hint)}</span>` : ''}</span>
+            ${subparamInputHTML(def, state.selectedForce, sf)}
+          </div>`).join('')
+      }</div>`
+    : ''
 
   const addForceOptions = Object.keys(FORCE_FNS)
     .map(n => `<option value="${n}">${n}</option>`).join('')
@@ -360,11 +361,12 @@ function renderPanel() {
     ${state.panelOpen ? `
       <div class="panel-section">
         <div class="section-label">Forces</div>
-        <div class="chips">${forcesHTML}</div>
+        <div class="chips">${chipsHTML}</div>
         <select class="chip-add">
           <option value="">+ add</option>
           ${addForceOptions}
         </select>
+        ${forceSubparamsHTML}
       </div>
       <div class="panel-section">
         <div class="section-label">Parameter</div>
