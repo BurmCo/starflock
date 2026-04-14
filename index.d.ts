@@ -73,6 +73,7 @@ export interface WorldOptions {
   maxEdgesPerNode?: number | null
   minEdgesPerNode?: number | null
   edgeCurvature?: number
+  edges?: Array<[number, number]> | null
   // Shape
   nodeShape?: string | ShapeFn
   // Glow
@@ -198,6 +199,8 @@ export declare namespace layouts {
       cy?: number
     }
   ): Layout
+
+  function constellationEdges(name: 'orion' | 'big-dipper'): Array<[number, number]>
 }
 
 // Presets namespace
