@@ -1,7 +1,7 @@
 import {
   World, drift, dampen, twinkle, mouseRepel,
   scrollDrift, gravity, wind, nodeRepel, noise, attract,
-} from 'https://esm.sh/starflock@0.3.0'
+} from 'https://esm.sh/starflock'
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
 
