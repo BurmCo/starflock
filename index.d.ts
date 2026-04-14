@@ -192,7 +192,7 @@ export declare namespace layouts {
   }): Layout
 
   function constellation(
-    name: 'orion' | 'big-dipper',
+    name: 'orion' | 'big-dipper' | 'cassiopeia' | 'crux' | 'cygnus' | 'leo',
     opts?: {
       scale?: number
       cx?: number
@@ -200,7 +200,7 @@ export declare namespace layouts {
     }
   ): Layout
 
-  function constellationEdges(name: 'orion' | 'big-dipper'): Array<[number, number]>
+  function constellationEdges(name: 'orion' | 'big-dipper' | 'cassiopeia' | 'crux' | 'cygnus' | 'leo'): Array<[number, number]>
 }
 
 // Presets namespace
