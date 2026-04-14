@@ -367,7 +367,8 @@ export class World {
   _drawEdges(ctx, nodes, opts, width, height) {
     if (opts.edgeStyle === 'dashed') ctx.setLineDash([4, 6])
 
-    if (opts.edges) {
+    if (Array.isArray(opts.edges)) {
+      // Infinity collapses the fade formula to flat edgeMaxOpacity for all pairs
       const edgeOpts = { ...opts, edgeMaxDist: Infinity }
       for (const [i, j] of opts.edges) {
         const a = nodes[i], b = nodes[j]
