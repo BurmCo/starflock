@@ -1,7 +1,7 @@
 import {
   World, drift, dampen, twinkle, mouseRepel,
   scrollDrift, gravity, wind, nodeRepel, noise, attract,
-} from 'https://esm.sh/starflock@0.2.3'
+} from 'https://esm.sh/starflock@0.3.0'
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
 
@@ -9,10 +9,10 @@ const FORCE_FNS = { drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wi
 
 // Keys must match FORCE_FNS exactly
 const FORCE_DEFS = {
-  drift:       [{ key: 'maxSpeed',  default: 0.5,    hint: '0.1 – 2.0' }],
+  drift:       [{ key: 'maxSpeed',  default: 0.5,    hint: '0.1 – 2.0' }, { key: 'minSpeed', default: 0.008, hint: '0.001 – 0.5' }],
   dampen:      [{ key: 'factor',    default: 0.98,   hint: '0.9 – 0.999' }],
-  twinkle:     [{ key: 'variance',  default: 0.5,    hint: '0.0 – 1.0' }],
-  mouseRepel:  [{ key: 'radius',    default: 100,    hint: '50 – 300' }, { key: 'strength', default: 0.01, hint: '0.001 – 0.05' }, { key: 'mode', default: 'repel', options: ['repel', 'attract'] }],
+  twinkle:     [{ key: 'variance',  default: 0.5,    hint: '0.0 – 1.0' }, { key: 'minBrightness', default: 0.5, hint: '0.0 – 1.0' }],
+  mouseRepel:  [{ key: 'radius',    default: 100,    hint: '50 – 300' }, { key: 'strength', default: 0.01, hint: '0.001 – 0.05' }, { key: 'mode', default: 'repel', options: ['repel', 'attract', 'orbit'] }],
   wind:        [{ key: 'angle',     default: 0,      hint: '0 – 360' },  { key: 'strength', default: 0.001, hint: '0.0001 – 0.01' }, { key: 'gust', default: 0, hint: '0.0 – 1.0' }],
   gravity:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'strength', default: 0.0005, hint: '0.0001 – 0.005' }],
   nodeRepel:   [{ key: 'radius',    default: 40,     hint: '10 – 150' },  { key: 'strength', default: 0.003, hint: '0.001 – 0.02' }],
@@ -39,7 +39,8 @@ const PARAM_DEFS = [
   'nodeColorMode', 'nodeSpawnRegion', 'nodeSizeDistribution',
   'edgeMaxDist', 'edgeMaxOpacity', 'edgeWidth', 'edgeStyle',
   'edgeCurvature', 'edgeColors', 'edgeColorMode', 'maxEdgesPerNode', 'minEdgesPerNode',
-  'renderOrder', 'blendMode', 'glowOpacity', 'glowScale', 'glowThreshold', 'background',
+  'renderOrder', 'blendMode', 'glowOnLargeNodes', 'glowOpacity', 'glowScale', 'glowThreshold', 'background',
+  'maxEdgesPerFrame', 'spatialIndex',
 ]
 
 const PARAM_DESCS = {
@@ -66,6 +67,9 @@ const PARAM_DESCS = {
   glowScale:           { desc: 'How large the bloom halo is relative to the node.',                   hint: '1.0 – 6.0' },
   glowThreshold:       { desc: 'Minimum node radius (px) before bloom halo is drawn.',               hint: '0.5 – 5' },
   background:          { desc: 'Canvas background colour.',                                            isColor: true },
+  glowOnLargeNodes:    { desc: 'Master switch for the bloom halo on large nodes.',                    options: ['true', 'false'] },
+  maxEdgesPerFrame:    { desc: 'Hard cap on edges drawn per frame — reduces GPU load at high node counts. null = unlimited.', hint: '100 – 2000' },
+  spatialIndex:        { desc: 'Use a QuadTree for edge distance queries — O(n log n) vs O(n²). Worth enabling above ~200 nodes.', options: ['false', 'true'] },
 }
 
 function parseValue(v) {
