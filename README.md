@@ -29,13 +29,15 @@ world.start()
 
 ---
 
-## Full-screen background
+## Recipes
+
+### Full-screen background
 
 ```js
 const world = new World({
   canvas,
-  autoResize: true,        // fits canvas to window, handles resize
-  pauseWhenHidden: true,   // pauses when tab is not visible
+  autoResize: true,
+  pauseWhenHidden: true,
   pauseWhenOffscreen: true,
   nodeCount: 60,
   colors: ['#ffffff', '#cce8ff', '#fff4e0'],
@@ -45,9 +47,35 @@ const world = new World({
 world.start()
 ```
 
----
+### Constellation with predefined edges
 
-## React
+```js
+import { World, layouts, twinkle, dampen, mouseRepel } from 'starflock'
+
+new World({
+  canvas,
+  layout: layouts.constellation('orion'),
+  edges:  layouts.constellationEdges('orion'),
+  colors: ['#ffffff', '#aad4ff', '#ffd2aa'],
+  nodeSize: [1.5, 3.5],
+  edgeMaxOpacity: 0.55,
+  forces: [twinkle(), dampen(), mouseRepel()],
+}).start()
+```
+
+### Preset — one-liner
+
+```js
+import { World, presets, twinkle, dampen, mouseRepel } from 'starflock'
+
+new World({
+  canvas,
+  ...presets.orion(),
+  forces: [twinkle(), dampen(), mouseRepel()],
+}).start()
+```
+
+### React
 
 ```jsx
 import { useStarflock } from 'starflock/react'
@@ -72,7 +100,7 @@ export default function Background() {
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `nodeCount` | `number` | `60` | Number of nodes |
+| `nodeCount` | `number` | `60` | Number of nodes — ignored when `layout` is set |
 | `nodeSize` | `[min, max]` | `[0.8, 2.8]` | Radius range in px |
 | `colors` | `string[]` | `['#ffffff']` | Node colors |
 | `nodeShape` | `'circle' \| 'diamond' \| 'star' \| 'cross' \| 'ring'` | `'circle'` | Node shape |
@@ -80,12 +108,14 @@ export default function Background() {
 | `nodeSizeDistribution` | `'uniform' \| 'gaussian' \| 'weighted-small'` | `'uniform'` | Size sampling distribution |
 | `nodeColorMode` | `'random' \| 'by-size' \| 'sequential' \| 'gradient' \| 'by-position'` | `'random'` | How colors are assigned |
 | `nodeSpawnRegion` | `'full' \| 'center' \| 'edges' \| fn` | `'full'` | Where nodes spawn. `fn(width, height) => {x, y}` for custom regions |
+| `layout` | `Layout \| Layout[]` | — | Deterministic node placement — overrides `nodeCount` and `nodeSpawnRegion` |
 
 ### Edges
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `edgeMaxDist` | `number` | `180` | Max distance for edge to appear |
+| `edges` | `Array<[number, number]> \| null` | `null` | Predefined index pairs — when set, only these connections are drawn |
+| `edgeMaxDist` | `number` | `180` | Max distance for edge to appear — ignored when `edges` is set |
 | `edgeMaxOpacity` | `number` | `0.18` | Max edge opacity |
 | `edgeWidth` | `number` | `0.5` | Edge stroke width in px |
 | `edgeColors` | `string[]` | `null` | Edge colors — falls back to `colors` if not set |
@@ -131,6 +161,99 @@ export default function Background() {
 | `onNodeHover` | `(node) => void` | Called when cursor enters a node's hitbox |
 | `onNodeLeave` | `(node) => void` | Called when cursor leaves a node's hitbox |
 | `onNodeClick` | `(node) => void` | Called when a node is clicked |
+
+---
+
+## Layouts & Presets
+
+A `Layout` is a function `(width, height) => Array<{x, y}>` that returns deterministic node positions. Pass one or an array to combine multiple layouts.
+
+### `layouts.ring(opts?)`
+
+Places nodes evenly on a circle.
+
+| Param | Default | |
+|---|---|---|
+| `count` | `48` | Number of nodes |
+| `radius` | `0.38` | Radius relative to `Math.min(width, height)` |
+| `cx` | `0.5` | Center x, relative to width |
+| `cy` | `0.5` | Center y, relative to height |
+
+### `layouts.constellation(name, opts?)`
+
+Places nodes at named star positions. Coordinates are scaled to the canvas.
+
+**Available names:** `'orion'` · `'big-dipper'` · `'cassiopeia'` · `'crux'` · `'cygnus'` · `'leo'`
+
+| Param | Default | |
+|---|---|---|
+| `scale` | `0.7` | Size relative to `Math.min(width, height)` |
+| `cx` | `0.5` | Center x, relative to width |
+| `cy` | `0.5` | Center y, relative to height |
+
+### `layouts.constellationEdges(name)`
+
+Returns the predefined edge pairs for a constellation — index pairs into the node array produced by `layouts.constellation(name)`.
+
+```js
+new World({
+  canvas,
+  layout: layouts.constellation('cassiopeia'),
+  edges:  layouts.constellationEdges('cassiopeia'),
+  ...
+})
+```
+
+### Combining layouts
+
+Pass an array of layouts to merge multiple constellations. Offset the edge indices by the cumulative node count of previous layouts:
+
+```js
+const orionEdges  = layouts.constellationEdges('orion')
+const dipperEdges = layouts.constellationEdges('big-dipper').map(([i, j]) => [i + 7, j + 7])
+
+new World({
+  canvas,
+  layout: [
+    layouts.constellation('orion',      { cx: 0.3 }),
+    layouts.constellation('big-dipper', { cx: 0.7 }),
+  ],
+  edges: [...orionEdges, ...dipperEdges],
+  ...
+})
+```
+
+### Custom layouts
+
+Any function `(width, height) => Array<{x, y}>` works:
+
+```js
+function circle(count = 40) {
+  return (width, height) => Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2
+    return {
+      x: width  / 2 + Math.cos(angle) * width  * 0.35,
+      y: height / 2 + Math.sin(angle) * height * 0.35,
+    }
+  })
+}
+
+new World({ canvas, layout: circle(40), forces: [twinkle(), dampen()] }).start()
+```
+
+### Presets
+
+Presets are plain objects — spread them into the constructor and override anything:
+
+```js
+import { presets } from 'starflock'
+
+presets.orion()      // layout + edges + colors for Orion
+presets.bigDipper()  // layout + edges + colors for the Big Dipper
+
+// override individual options
+new World({ canvas, ...presets.orion(), edgeMaxOpacity: 0.8 }).start()
+```
 
 ---
 
@@ -246,22 +369,6 @@ new World({ canvas, forces: [pulse(), dampen(), drift()] })
 
 ---
 
-## API
-
-### `world.start()`
-Begins the render loop and registers event listeners.
-
-### `world.stop()`
-Cancels the render loop and removes all event listeners.
-
-### `world.scrollY`
-Set directly when managing scroll manually (e.g. in a bounded canvas):
-```js
-window.addEventListener('scroll', () => { world.scrollY = window.scrollY })
-```
-
----
-
 ## Shapes
 
 `circle` · `diamond` · `star` · `cross` · `ring`
@@ -281,4 +388,30 @@ function triangle(ctx, x, y, r) {
 }
 
 new World({ canvas, nodeShape: triangle })
+```
+
+---
+
+## API
+
+### `world.start()`
+Begins the render loop and registers event listeners.
+
+### `world.stop()`
+Cancels the render loop and removes all event listeners.
+
+### `world.update(options)`
+Live-updates any option without restarting. Node positions and velocities are preserved.
+
+```js
+world.update({ colors: ['#ff0000'], edgeMaxOpacity: 0.4 })
+```
+
+### `world.resize()`
+Recomputes canvas dimensions and recreates nodes. Call this when managing canvas size manually (`autoResize: false`).
+
+### `world.scrollY`
+Set directly when managing scroll manually (e.g. in a bounded canvas):
+```js
+window.addEventListener('scroll', () => { world.scrollY = window.scrollY })
 ```
