@@ -156,14 +156,14 @@ export class World {
 
     const rawNodes = Array.from({ length: count }, (_, i) => {
       const pos = positions ? positions[i] : spawnPosition(nodeSpawnRegion, width, height)
-      const r = this._sampleNodeRadius(minR, maxR)
+      const r = Math.max(0, this._sampleNodeRadius(minR, maxR))
       const node = new Node({
         x: pos.x,
         y: pos.y,
         r,
         vx: rand(-0.08, 0.08),
         vy: rand(-0.08, 0.08),
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: colors.length ? colors[Math.floor(Math.random() * colors.length)] : '#ffffff',
         phase: Math.random() * Math.PI * 2,
         twinkleSpeed: rand(0.001, 0.003),
       })
@@ -330,7 +330,7 @@ export class World {
     ctx.beginPath()
     ctx.moveTo(a.x, a.y)
 
-    if (edgeCurvature > 0) {
+    if (edgeCurvature !== 0) {
       const mx = (a.x + b.x) / 2
       const my = (a.y + b.y) / 2
       const dx = b.x - a.x
@@ -453,6 +453,7 @@ export class World {
 
       if (opts.glowOnLargeNodes && node.r > opts.glowThreshold) {
         const haloR = node.r * opts.glowScale
+        if (haloR <= 0) continue
         const grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, haloR)
         grd.addColorStop(0, node.color)
         grd.addColorStop(1, 'transparent')
