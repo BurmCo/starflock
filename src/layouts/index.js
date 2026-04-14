@@ -1,2 +1,2 @@
-export { ring }          from './ring.js'
-export { constellation } from './constellations.js'
+export { ring }                               from './ring.js'
+export { constellation, constellationEdges }  from './constellations.js'

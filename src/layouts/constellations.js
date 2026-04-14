@@ -28,6 +28,27 @@ const STARS = {
   ],
 }
 
+const EDGES = {
+  'orion': [
+    [0, 1], // shoulders
+    [0, 2], // left shoulder → left belt
+    [1, 4], // right shoulder → right belt
+    [2, 3], // belt left–center
+    [3, 4], // belt center–right
+    [2, 5], // left belt → left foot
+    [4, 6], // right belt → right foot
+  ],
+  'big-dipper': [
+    [0, 1], // bowl right side
+    [1, 2], // bowl bottom
+    [2, 3], // bowl left side
+    [3, 0], // bowl top
+    [3, 4], // handle start
+    [4, 5], // handle middle
+    [5, 6], // handle end
+  ],
+}
+
 export function constellation(name, { scale = 0.7, cx = 0.5, cy = 0.5 } = {}) {
   const stars = STARS[name]
   if (!stars) throw new Error(`starflock: unknown constellation "${name}"`)
@@ -39,4 +60,10 @@ export function constellation(name, { scale = 0.7, cx = 0.5, cy = 0.5 } = {}) {
       y: cy * height + (ny - 0.5) * s,
     }))
   }
+}
+
+export function constellationEdges(name) {
+  const edges = EDGES[name]
+  if (!edges) throw new Error(`starflock: unknown constellation "${name}"`)
+  return edges
 }
