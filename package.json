@@ -1,6 +1,6 @@
 {
   "name": "starflock",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.",
   "keywords": ["canvas", "particles", "animation", "constellation", "webgl", "background", "force", "interactive"],
   "author": "Corvin Burmeister",
@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/BurmCo/starflock/issues"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "scripts": {
+    "dev": "node scripts/dev.js"
+  }
 }
