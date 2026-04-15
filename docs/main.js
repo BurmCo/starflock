@@ -1,7 +1,8 @@
 import {
   World, drift, dampen, twinkle, mouseRepel,
   scrollDrift, gravity, wind, nodeRepel, noise, attract,
-} from 'https://esm.sh/starflock'
+  layouts,
+} from 'starflock'
 
 // ─── Data Definitions ─────────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ const FORCE_DESCS = {
 }
 
 const PARAM_DEFS = [
+  'layout',
   'nodeCount', 'nodeSize', 'colors', 'nodeShape', 'nodeRotation',
   'nodeColorMode', 'nodeSpawnRegion', 'nodeSizeDistribution',
   'edgeMaxDist', 'edgeMaxOpacity', 'edgeWidth', 'edgeStyle',
@@ -44,6 +46,7 @@ const PARAM_DEFS = [
 ]
 
 const PARAM_DESCS = {
+  layout:              { desc: 'Positions nodes using a built-in layout. Constellation layouts also set predefined edges automatically.', options: ['none', 'ring', 'constellation:orion', 'constellation:big-dipper', 'constellation:cassiopeia', 'constellation:crux', 'constellation:cygnus', 'constellation:leo'] },
   nodeCount:           { desc: 'Total number of nodes spawned in the world.',                           hint: '20 – 500' },
   nodeSize:            { desc: 'Base radius of each node in canvas pixels.',                            hint: '1 – 20' },
   colors:              { desc: 'Array of hex colours nodes are randomly drawn from.',                   isColorArray: true },
@@ -137,10 +140,28 @@ const state = {
 const canvas = document.getElementById('canvas')
 let world = null
 
+function resolveLayout(config) {
+  const lv = config.layout
+  if (!lv || lv === 'none') {
+    delete config.layout
+    return
+  }
+  if (lv === 'ring') {
+    config.layout = layouts.ring()
+    return
+  }
+  if (typeof lv === 'string' && lv.startsWith('constellation:')) {
+    const name = lv.slice('constellation:'.length)
+    config.layout = layouts.constellation(name)
+    config.edges  = layouts.constellationEdges(name)
+  }
+}
+
 function applyWorld() {
   const config = Object.fromEntries(
     state.params.map(p => [p.key, parseValue(p.value)])
   )
+  resolveLayout(config)
   const forces = state.forces.filter(f => FORCE_DEFS[f.name]).map(f => {
     const params = {}
     for (const def of FORCE_DEFS[f.name]) {
@@ -360,6 +381,14 @@ function renderPanel() {
     </div>
     ${state.panelOpen ? `
       <div class="panel-section">
+        <div class="section-label">Presets</div>
+        <div class="preset-btns">
+          <button class="preset-btn" data-preset="orion">orion</button>
+          <button class="preset-btn" data-preset="bigDipper">big dipper</button>
+          <button class="preset-btn" data-preset="clear">clear</button>
+        </div>
+      </div>
+      <div class="panel-section">
         <div class="section-label">Forces</div>
         <div class="chips">${chipsHTML}</div>
         <select class="chip-add">
@@ -397,6 +426,46 @@ function attachEvents() {
   panel.querySelector('.panel-collapse')?.addEventListener('click', () => {
     state.panelOpen = !state.panelOpen
     renderPanel()
+  })
+
+  // Preset buttons
+  panel.querySelectorAll('[data-preset]').forEach(el => {
+    el.addEventListener('click', () => {
+      const name = el.dataset.preset
+      if (name === 'clear') {
+        state.params = [{ key: 'nodeCount', value: '60' }]
+        state.forces = [
+          { name: 'drift',      params: {} },
+          { name: 'dampen',     params: {} },
+          { name: 'twinkle',    params: {} },
+          { name: 'mouseRepel', params: {} },
+        ]
+        state.selectedForce = null
+        state.selectedParam = null
+      } else if (name === 'orion') {
+        state.params = [
+          { key: 'layout',        value: 'constellation:orion' },
+          { key: 'colors',        value: JSON.stringify(['#ffffff', '#aad4ff', '#ffd2aa']) },
+          { key: 'nodeSize',      value: '[1.5, 3.5]' },
+          { key: 'edgeMaxOpacity', value: '0.55' },
+        ]
+        state.forces = [{ name: 'twinkle', params: {} }]
+        state.selectedForce = null
+        state.selectedParam = null
+      } else if (name === 'bigDipper') {
+        state.params = [
+          { key: 'layout',        value: 'constellation:big-dipper' },
+          { key: 'colors',        value: JSON.stringify(['#ffffff', '#cce8ff', '#e8f4ff']) },
+          { key: 'nodeSize',      value: '[1.5, 3]' },
+          { key: 'edgeMaxOpacity', value: '0.5' },
+        ]
+        state.forces = [{ name: 'twinkle', params: {} }]
+        state.selectedForce = null
+        state.selectedParam = null
+      }
+      renderPanel()
+      applyWorld()
+    })
   })
 
   if (!state.panelOpen) return

@@ -201,6 +201,17 @@
     }
     .subparam-key .info-hint { margin-left: 4px; }
 
+    /* Presets */
+    .preset-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+    .preset-btn {
+      background: #161a18; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 4px 12px; color: #4a4845;
+      font-family: inherit; font-size: 11px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .preset-btn:hover { color: #5DCAA5; border-color: rgba(93,202,165,0.3); }
+    .preset-btn[data-preset="clear"]:hover { color: #F0997B; border-color: rgba(240,153,123,0.3); }
+
     /* Apply */
     .apply-btn {
       display: block; width: 100%; background: #1e2a20;
@@ -216,6 +227,9 @@
 <body>
   <canvas id="canvas"></canvas>
   <div id="panel"></div>
+  <script type="importmap">
+    { "imports": { "starflock": "https://esm.sh/starflock" } }
+  </script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>
