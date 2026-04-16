@@ -1,8 +1,17 @@
 {
   "name": "starflock",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.",
-  "keywords": ["canvas", "particles", "animation", "constellation", "webgl", "background", "force", "interactive"],
+  "keywords": [
+    "canvas",
+    "particles",
+    "animation",
+    "constellation",
+    "webgl",
+    "background",
+    "force",
+    "interactive"
+  ],
   "author": "Corvin Burmeister",
   "license": "MIT",
   "type": "module",
