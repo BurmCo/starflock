@@ -1,3 +1,18 @@
+// Reproducible pseudo-random values for the noise lattice — shared by all
+// noise() instances; depends only on the fixed GRID size, never on options
+const GRID = 256
+const TABLE = new Float32Array(GRID * GRID * 2)
+for (let i = 0; i < TABLE.length; i++) {
+  const h = Math.sin(i * 127.1 + 311.7) * 43758.5453
+  TABLE[i] = h - Math.floor(h)
+}
+
+const latticeX = (ix, iy) => TABLE[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2]
+const latticeY = (ix, iy) => TABLE[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2 + 1]
+
+// Smoothstep for bilinear interpolation weight
+const smooth = (t) => t * t * (3 - 2 * t)
+
 /**
  * noise — organic drifting via 2D Value Noise
  *
@@ -9,21 +24,6 @@
  * The noise field shifts slowly over time, creating smooth, organic motion.
  */
 export function noise({ scale = 0.003, strength = 0.0008, speed = 0.0005 } = {}) {
-  // Reproducible pseudo-random values for the noise lattice
-  const GRID = 256
-  const table = new Float32Array(GRID * GRID * 2)
-  for (let i = 0; i < table.length; i++) {
-    // Simple LCG seeded by index for determinism
-    const h = Math.sin(i * 127.1 + 311.7) * 43758.5453
-    table[i] = h - Math.floor(h)
-  }
-
-  const latticeX = (ix, iy) => table[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2]
-  const latticeY = (ix, iy) => table[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2 + 1]
-
-  // Smoothstep for bilinear interpolation weight
-  const smooth = (t) => t * t * (3 - 2 * t)
-
   const valueNoiseVec = (wx, wy) => {
     const ix = Math.floor(wx)
     const iy = Math.floor(wy)
