@@ -10,10 +10,16 @@
  * strength: multiplier for the effect intensity (default 1.0)
  */
 export function scrollDrift({ mode = 'rotate', strength = 1.0, fn } = {}) {
-  let lastScrollY = 0
+  let lastScrollY = null
 
   return (nodes, context) => {
     const { scrollY, width, height } = context
+    if (lastScrollY === null) {
+      // first invocation: record the baseline, apply nothing — the absolute
+      // scroll position is not a delta
+      lastScrollY = scrollY
+      return
+    }
     const delta = scrollY - lastScrollY
     lastScrollY = scrollY
     if (delta === 0) return

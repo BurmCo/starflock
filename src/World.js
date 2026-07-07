@@ -569,6 +569,7 @@ export class World {
     this._started = true
     this._pausedHidden = false
     this._pausedOffscreen = false
+    this.scrollY = window.scrollY
     this._resize()
     window.addEventListener('resize', this._onResize)
     window.addEventListener('mousemove', this._onMouseMove)
