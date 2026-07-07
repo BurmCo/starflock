@@ -106,12 +106,22 @@ const DEFAULTS = {
   pauseWhenOffscreen: false,
 }
 
+const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+
+function assignOptions(target, source) {
+  for (const key of Object.keys(source)) {
+    if (BLOCKED_KEYS.has(key) || source[key] === undefined) continue
+    target[key] = source[key]
+  }
+  return target
+}
+
 export class World {
   constructor({ canvas, forces = [], ...options } = {}) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.forces = forces
-    this.options = { ...DEFAULTS, ...options }
+    this.options = assignOptions({ ...DEFAULTS }, options)
     this._edgeColorsExplicit = !!options.edgeColors
     if (!this.options.edgeColors) {
       this.options.edgeColors = this.options.colors
@@ -299,7 +309,7 @@ export class World {
   }
 
   update(newOptions) {
-    Object.assign(this.options, newOptions)
+    assignOptions(this.options, newOptions)
     if (newOptions.colors && !newOptions.edgeColors && !this._edgeColorsExplicit) {
       this.options.edgeColors = newOptions.colors
     }
