@@ -52,9 +52,10 @@ export const ring = (ctx, x, y, r) => {
   ctx.restore()
 }
 
+const SHAPES = { circle, diamond, star, cross, ring }
+
 /** Resolve a shape option to a render function */
 export function resolveShape(shape) {
   if (typeof shape === 'function') return shape
-  const map = { circle, diamond, star, cross, ring }
-  return map[shape] ?? circle
+  return Object.hasOwn(SHAPES, shape) ? SHAPES[shape] : circle
 }
