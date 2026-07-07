@@ -497,6 +497,8 @@ export class World {
   }
 
   _loop(time) {
+    if (!this._started) return
+
     const { canvas, ctx, nodes, forces } = this
     const width = this._logicalWidth ?? canvas.width
     const height = this._logicalHeight ?? canvas.height
@@ -540,7 +542,7 @@ export class World {
 
     if (opts.onFrame) opts.onFrame(nodes, context)
 
-    this.raf = requestAnimationFrame(this._loop)
+    if (this._started) this.raf = requestAnimationFrame(this._loop)
   }
 
   start() {
