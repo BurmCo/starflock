@@ -16,7 +16,8 @@ function gaussianRand(minR, maxR) {
 }
 
 function hexToRgb(hex) {
-  const h = hex.replace('#', '')
+  let h = hex.replace('#', '')
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
@@ -28,6 +29,7 @@ function lerpColor(colors, t) {
   const f = scaled - i
   const [r1, g1, b1] = hexToRgb(colors[i])
   const [r2, g2, b2] = hexToRgb(colors[i + 1])
+  if ([r1, g1, b1, r2, g2, b2].some(Number.isNaN)) return colors[i]
   return `rgb(${Math.round(r1 + (r2 - r1) * f)},${Math.round(g1 + (g2 - g1) * f)},${Math.round(b1 + (b2 - b1) * f)})`
 }
 

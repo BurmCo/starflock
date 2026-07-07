@@ -16,3 +16,26 @@ test('glowScale 0 disables the halo but still draws the node', () => {
   world.stop()
   dom.uninstall()
 })
+
+test('3-digit hex works in gradient mode', () => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas(), nodeCount: 5, colors: ['#fff', '#000'], nodeColorMode: 'gradient' })
+  world.start()
+  for (const node of world.nodes) {
+    assert.match(node.color, /^rgb\(\d+,\d+,\d+\)$/)
+  }
+  world.stop()
+  dom.uninstall()
+})
+
+test('non-hex CSS colors fall back to the nearest stop instead of rgb(NaN)', () => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas(), nodeCount: 5, nodeSize: [3, 3], colors: ['red', 'blue'], nodeColorMode: 'gradient' })
+  world.start()
+  for (const node of world.nodes) {
+    assert.ok(node.color === 'red' || node.color === 'blue', `got ${node.color}`)
+  }
+  dom.flushRaf(0) // glow path — addColorStop must not throw
+  world.stop()
+  dom.uninstall()
+})
