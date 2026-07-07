@@ -316,6 +316,10 @@ export class World {
     if (newOptions.edgeColors) {
       this._edgeColorsExplicit = true
     }
+    if (!this.options.edgeColors) {
+      this.options.edgeColors = this.options.colors
+      this._edgeColorsExplicit = false
+    }
     if (newOptions.forces !== undefined) {
       this.forces = newOptions.forces
     }

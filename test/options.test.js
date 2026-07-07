@@ -19,3 +19,14 @@ test('update() ignores __proto__ / constructor / prototype keys', () => {
   assert.equal(world.options.polluted, undefined)
   dom.uninstall()
 })
+
+test('update({ edgeColors: null }) falls back to colors and keeps rendering', () => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas(), colors: ['#abcdef'] })
+  world.start()
+  world.update({ edgeColors: null })
+  dom.flushRaf(0)
+  dom.flushRaf(16)
+  assert.deepEqual(world.options.edgeColors, ['#abcdef'])
+  world.stop(); dom.uninstall()
+})
