@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { World } from '../src/World.js'
+import { cross } from '../src/shapes.js'
 import { createMockCanvas, installDom } from './helpers/mock-dom.js'
 
 test('glowScale 0 disables the halo but still draws the node', () => {
@@ -36,6 +37,19 @@ test('non-hex CSS colors fall back to the nearest stop instead of rgb(NaN)', () 
     assert.ok(node.color === 'red' || node.color === 'blue', `got ${node.color}`)
   }
   dom.flushRaf(0) // glow path — addColorStop must not throw
+  world.stop()
+  dom.uninstall()
+})
+
+test('reassigning node.shape takes effect on the next frame', () => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas(), nodeCount: 1, glowOnLargeNodes: false })
+  world.start()
+  world.nodes[0].shape = 'star'
+  dom.flushRaf(0)
+  world.nodes[0].shape = 'cross'
+  dom.flushRaf(16)
+  assert.equal(world.nodes[0]._resolvedShape, cross)
   world.stop()
   dom.uninstall()
 })

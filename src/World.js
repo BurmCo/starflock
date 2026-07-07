@@ -474,7 +474,14 @@ export class World {
         1
       )
       const alpha = (node.brightness ?? 1) * edgeFade
-      const shape = node.shape ? (node._resolvedShape ??= resolveShape(node.shape)) : drawShape
+      let shape = drawShape
+      if (node.shape) {
+        if (node._shapeKey !== node.shape) {
+          node._shapeKey = node.shape
+          node._resolvedShape = resolveShape(node.shape)
+        }
+        shape = node._resolvedShape
+      }
 
       if (opts.glowOnLargeNodes && node.r > opts.glowThreshold) {
         const haloR = node.r * opts.glowScale
