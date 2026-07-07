@@ -467,15 +467,16 @@ export class World {
 
       if (opts.glowOnLargeNodes && node.r > opts.glowThreshold) {
         const haloR = node.r * opts.glowScale
-        if (haloR <= 0) continue
-        const grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, haloR)
-        grd.addColorStop(0, node.color)
-        grd.addColorStop(1, 'transparent')
-        ctx.beginPath()
-        ctx.arc(node.x, node.y, haloR, 0, Math.PI * 2)
-        ctx.fillStyle = grd
-        ctx.globalAlpha = alpha * opts.glowOpacity
-        ctx.fill()
+        if (haloR > 0) {
+          const grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, haloR)
+          grd.addColorStop(0, node.color)
+          grd.addColorStop(1, 'transparent')
+          ctx.beginPath()
+          ctx.arc(node.x, node.y, haloR, 0, Math.PI * 2)
+          ctx.fillStyle = grd
+          ctx.globalAlpha = alpha * opts.glowOpacity
+          ctx.fill()
+        }
       }
 
       ctx.globalAlpha = alpha
