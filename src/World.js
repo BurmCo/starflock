@@ -118,6 +118,13 @@ function assignOptions(target, source) {
   return target
 }
 
+// Options only consumed by _createNodes — changing them requires a rebuild
+const NODE_REBUILD_KEYS = ['nodeCount', 'nodeSize', 'nodeSizeDistribution', 'nodeSpawnRegion', 'nodeRotation', 'layout']
+
+function sameForces(a, b) {
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((f, i) => f === b[i])
+}
+
 export class World {
   constructor({ canvas, forces = [], ...options } = {}) {
     this.canvas = canvas
@@ -157,7 +164,7 @@ export class World {
     const width  = this._logicalWidth  ?? this.canvas.width
     const height = this._logicalHeight ?? this.canvas.height
     const opts   = this.options
-    const { nodeSize, colors, nodeColorMode, nodeSpawnRegion, nodeRotation } = opts
+    const { nodeSize, colors, nodeSpawnRegion, nodeRotation } = opts
     const [minR, maxR] = Array.isArray(nodeSize) ? nodeSize : [nodeSize, nodeSize]
 
     let positions = null
@@ -332,19 +339,78 @@ export class World {
   }
 
   update(newOptions) {
-    assignOptions(this.options, newOptions)
-    if (newOptions.colors && !newOptions.edgeColors && !this._edgeColorsExplicit) {
-      this.options.edgeColors = newOptions.colors
+    const prev = {
+      onNodeClick: this.options.onNodeClick,
+      pauseWhenHidden: this.options.pauseWhenHidden,
+      pauseWhenOffscreen: this.options.pauseWhenOffscreen,
     }
-    if (newOptions.edgeColors) {
+
+    const { forces: newForces, canvas: _canvas, ...rest } = newOptions
+    assignOptions(this.options, rest)
+
+    if (rest.colors && !rest.edgeColors && !this._edgeColorsExplicit) {
+      this.options.edgeColors = rest.colors
+    }
+    if (rest.edgeColors) {
       this._edgeColorsExplicit = true
     }
     if (!this.options.edgeColors) {
       this.options.edgeColors = this.options.colors
       this._edgeColorsExplicit = false
     }
-    if (newOptions.forces !== undefined) {
-      this.forces = newOptions.forces
+
+    if (newForces !== undefined && !sameForces(this.forces, newForces)) {
+      this.forces = newForces
+    }
+
+    if (NODE_REBUILD_KEYS.some(key => rest[key] !== undefined)) {
+      this._createNodes()
+    } else if (rest.colors !== undefined || rest.nodeColorMode !== undefined) {
+      this._applyColors(this.nodes)
+    }
+
+    if (this._started) this._syncListeners(prev)
+  }
+
+  _observeCanvas() {
+    this._io = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          this._pausedOffscreen = false
+          this._maybeResume()
+        } else {
+          this._pausedOffscreen = true
+          cancelAnimationFrame(this.raf)
+          this.raf = null
+        }
+      }
+    }, { threshold: 0 })
+    this._io.observe(this.canvas)
+  }
+
+  _syncListeners(prev) {
+    const opts = this.options
+
+    if (!prev.onNodeClick && opts.onNodeClick) {
+      window.addEventListener('click', this._onClick)
+    } else if (prev.onNodeClick && !opts.onNodeClick) {
+      window.removeEventListener('click', this._onClick)
+    }
+
+    if (!prev.pauseWhenHidden && opts.pauseWhenHidden) {
+      document.addEventListener('visibilitychange', this._onVisibilityChange)
+    } else if (prev.pauseWhenHidden && !opts.pauseWhenHidden) {
+      document.removeEventListener('visibilitychange', this._onVisibilityChange)
+      this._pausedHidden = false
+      this._maybeResume()
+    }
+
+    if (!prev.pauseWhenOffscreen && opts.pauseWhenOffscreen) {
+      this._observeCanvas()
+    } else if (prev.pauseWhenOffscreen && !opts.pauseWhenOffscreen) {
+      if (this._io) { this._io.disconnect(); this._io = null }
+      this._pausedOffscreen = false
+      this._maybeResume()
     }
   }
 
@@ -593,19 +659,7 @@ export class World {
       window.addEventListener('click', this._onClick)
     }
     if (this.options.pauseWhenOffscreen) {
-      this._io = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            this._pausedOffscreen = false
-            this._maybeResume()
-          } else {
-            this._pausedOffscreen = true
-            cancelAnimationFrame(this.raf)
-            this.raf = null
-          }
-        }
-      }, { threshold: 0 })
-      this._io.observe(this.canvas)
+      this._observeCanvas()
     } else {
       this.raf = requestAnimationFrame(this._loop)
     }
