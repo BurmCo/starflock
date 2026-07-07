@@ -189,28 +189,40 @@ export class World {
       return node
     })
 
+    this._applyColors(rawNodes)
+
+    this.nodes = rawNodes
+  }
+
+  _applyColors(nodes) {
+    const { colors, nodeColorMode } = this.options
+    const width = this._logicalWidth ?? this.canvas.width
+    const height = this._logicalHeight ?? this.canvas.height
+
     if (nodeColorMode === 'by-size') {
-      const sorted = [...rawNodes].sort((a, b) => a.r - b.r)
+      const sorted = [...nodes].sort((a, b) => a.r - b.r)
       sorted.forEach((node, idx) => {
         const t = sorted.length === 1 ? 0 : idx / (sorted.length - 1)
         const colorIdx = Math.min(Math.floor(t * colors.length), colors.length - 1)
         node.color = colors[colorIdx]
       })
     } else if (nodeColorMode === 'sequential') {
-      rawNodes.forEach((node, i) => {
+      nodes.forEach((node, i) => {
         node.color = colors[i % colors.length]
       })
     } else if (nodeColorMode === 'gradient') {
-      rawNodes.forEach(node => {
+      nodes.forEach(node => {
         node.color = lerpColor(colors, node.x / width)
       })
     } else if (nodeColorMode === 'by-position') {
-      rawNodes.forEach(node => {
+      nodes.forEach(node => {
         node.color = lerpColor(colors, (node.x / width + node.y / height) / 2)
       })
+    } else {
+      nodes.forEach(node => {
+        node.color = colors.length ? colors[Math.floor(Math.random() * colors.length)] : '#ffffff'
+      })
     }
-
-    this.nodes = rawNodes
   }
 
   _resize() {
