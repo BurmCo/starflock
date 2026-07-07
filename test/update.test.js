@@ -89,3 +89,39 @@ test('update({ pauseWhenOffscreen }) toggles the IntersectionObserver live', (t)
   world.update({ pauseWhenOffscreen: false })
   assert.notEqual(world.raf, null, 'disabling the option resumes the loop')
 })
+
+test('update({ pauseWhenHidden: false }) while hidden-paused resumes and removes the listener', (t) => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas() })
+  t.after(() => {
+    world.stop()
+    dom.uninstall()
+  })
+  world.start()
+  dom.doc.hidden = true
+  dom.fire('document', 'visibilitychange')
+  assert.equal(world.raf, null, 'hidden pause engages')
+  world.update({ pauseWhenHidden: false })
+  assert.notEqual(world.raf, null, 'disabling pauseWhenHidden resumes')
+  assert.equal(dom.listenerCount('document', 'visibilitychange'), 0)
+  world.update({ pauseWhenHidden: true })
+  assert.equal(dom.listenerCount('document', 'visibilitychange'), 1)
+})
+
+test('update() with unchanged values is a no-op — no rebuild, no recolor', (t) => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas(), nodeCount: 5, colors: ['#aa0000', '#00bb00'] })
+  t.after(() => {
+    world.stop()
+    dom.uninstall()
+  })
+  world.start()
+  const before = world.nodes
+  world.nodes[0].color = '#sentinel'
+  world.update({ nodeCount: 5, colors: ['#aa0000', '#00bb00'] })
+  assert.equal(world.nodes, before, 'same values must not rebuild')
+  assert.equal(world.nodes[0].color, '#sentinel', 'same values must not recolor')
+  world.update({ nodeCount: 7 })
+  assert.notEqual(world.nodes, before, 'changed nodeCount must rebuild')
+  assert.equal(world.nodes.length, 7)
+})

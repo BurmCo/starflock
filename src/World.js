@@ -125,6 +125,11 @@ function sameForces(a, b) {
   return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((f, i) => f === b[i])
 }
 
+function sameValue(a, b) {
+  if (a === b) return true
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i])
+}
+
 export class World {
   constructor({ canvas, forces = [], ...options } = {}) {
     this.canvas = canvas
@@ -346,6 +351,12 @@ export class World {
     }
 
     const { forces: newForces, canvas: _canvas, ...rest } = newOptions
+
+    const prevVals = {}
+    for (const key of NODE_REBUILD_KEYS) prevVals[key] = this.options[key]
+    const prevColors = this.options.colors
+    const prevColorMode = this.options.nodeColorMode
+
     assignOptions(this.options, rest)
 
     if (rest.colors && !rest.edgeColors && !this._edgeColorsExplicit) {
@@ -363,9 +374,9 @@ export class World {
       this.forces = newForces
     }
 
-    if (NODE_REBUILD_KEYS.some(key => rest[key] !== undefined)) {
+    if (NODE_REBUILD_KEYS.some(key => !sameValue(prevVals[key], this.options[key]))) {
       this._createNodes()
-    } else if (rest.colors !== undefined || rest.nodeColorMode !== undefined) {
+    } else if (!sameValue(prevColors, this.options.colors) || prevColorMode !== this.options.nodeColorMode) {
       this._applyColors(this.nodes)
     }
 
