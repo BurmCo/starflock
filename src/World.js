@@ -405,6 +405,7 @@ export class World {
       const needsCounts = maxEdgesPerNode !== null || minEdgesPerNode !== null
       const edgeCounts = needsCounts ? new Int32Array(nodes.length) : null
       let totalEdges = 0
+      let mainPassComplete = true
 
       mainPass: {
         if (spatialIndex) {
@@ -412,14 +413,14 @@ export class World {
           for (const node of nodes) qt.insert(node)
 
           for (let i = 0; i < nodes.length; i++) {
-            if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+            if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) { mainPassComplete = false; break mainPass }
             if (edgeCounts && maxEdgesPerNode !== null && edgeCounts[i] >= maxEdgesPerNode) continue
             const a = nodes[i]
             const candidates = qt.queryRadius(a.x, a.y, edgeMaxDist)
             for (const b of candidates) {
               const j = b._index
               if (j <= i) continue
-              if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+              if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) { mainPassComplete = false; break mainPass }
               if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
               if (this._drawEdge(ctx, a, b, i, j, opts, edgeCounts)) totalEdges++
             }
@@ -427,7 +428,7 @@ export class World {
         } else {
           for (let i = 0; i < nodes.length; i++) {
             for (let j = i + 1; j < nodes.length; j++) {
-              if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break mainPass
+              if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) { mainPassComplete = false; break mainPass }
               if (edgeCounts && maxEdgesPerNode !== null && (edgeCounts[i] >= maxEdgesPerNode || edgeCounts[j] >= maxEdgesPerNode)) continue
               if (this._drawEdge(ctx, nodes[i], nodes[j], i, j, opts, edgeCounts)) totalEdges++
             }
@@ -438,7 +439,8 @@ export class World {
       // Minimum edges pass: for nodes with too few connections, draw to nearest neighbors
       if (minEdgesPerNode !== null) {
         const fallbackDist = edgeMaxDist * 3
-        for (let i = 0; i < nodes.length; i++) {
+        const fallbackOpts = { ...opts, edgeMaxDist: fallbackDist, edgeMaxOpacity: opts.edgeMaxOpacity * 0.5 }
+        fallbackPass: for (let i = 0; i < nodes.length; i++) {
           if (edgeCounts[i] >= minEdgesPerNode) continue
           const a = nodes[i]
           const byDist = []
@@ -449,10 +451,11 @@ export class World {
           byDist.sort((x, y) => x[1] - y[1])
           for (const [j, dist] of byDist) {
             if (edgeCounts[i] >= minEdgesPerNode) break
-            if (dist < edgeMaxDist) continue // already handled in main pass
+            if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break fallbackPass
+            if (mainPassComplete && dist < edgeMaxDist) continue // already handled in main pass
             if (dist >= fallbackDist) break
             if (maxEdgesPerNode !== null && edgeCounts[j] >= maxEdgesPerNode) continue
-            this._drawEdge(ctx, a, nodes[j], i, j, { ...opts, edgeMaxDist: fallbackDist, edgeMaxOpacity: opts.edgeMaxOpacity * 0.5 }, edgeCounts)
+            if (this._drawEdge(ctx, a, nodes[j], i, j, fallbackOpts, edgeCounts)) totalEdges++
           }
         }
       }
