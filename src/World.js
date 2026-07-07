@@ -135,6 +135,8 @@ export class World {
     this.scrollY = 0
     this._started = false
     this._hoveredNode = null
+    this._pausedHidden = false
+    this._pausedOffscreen = false
 
     this._onMouseMove = this._onMouseMove.bind(this)
     this._onScroll = this._onScroll.bind(this)
@@ -275,12 +277,19 @@ export class World {
     this.scrollY = window.scrollY
   }
 
+  _maybeResume() {
+    if (!this._started || this._pausedHidden || this._pausedOffscreen) return
+    if (this.raf === null) this.raf = requestAnimationFrame(this._loop)
+  }
+
   _onVisibilityChange() {
     if (document.hidden) {
+      this._pausedHidden = true
       cancelAnimationFrame(this.raf)
       this.raf = null
-    } else if (this.raf === null) {
-      this.raf = requestAnimationFrame(this._loop)
+    } else {
+      this._pausedHidden = false
+      this._maybeResume()
     }
   }
 
@@ -548,6 +557,8 @@ export class World {
   start() {
     if (this._started) return
     this._started = true
+    this._pausedHidden = false
+    this._pausedOffscreen = false
     this._resize()
     window.addEventListener('resize', this._onResize)
     window.addEventListener('mousemove', this._onMouseMove)
@@ -562,8 +573,10 @@ export class World {
       this._io = new IntersectionObserver(entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            if (this.raf === null) this.raf = requestAnimationFrame(this._loop)
+            this._pausedOffscreen = false
+            this._maybeResume()
           } else {
+            this._pausedOffscreen = true
             cancelAnimationFrame(this.raf)
             this.raf = null
           }
