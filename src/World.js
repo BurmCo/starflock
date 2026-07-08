@@ -546,9 +546,10 @@ export class World {
       let totalEdges = 0
       let mainPassComplete = true
 
+      let qt = null
       mainPass: {
         if (spatialIndex) {
-          const qt = new QuadTree(-1, -1, width + 2, height + 2)
+          qt = new QuadTree(-1, -1, width + 2, height + 2)
           for (const node of nodes) qt.insert(node)
 
           for (let i = 0; i < nodes.length; i++) {
@@ -582,18 +583,33 @@ export class World {
         fallbackPass: for (let i = 0; i < nodes.length; i++) {
           if (edgeCounts[i] >= minEdgesPerNode) continue
           const a = nodes[i]
-          const byDist = []
-          for (let j = 0; j < nodes.length; j++) {
+          const candidates = qt ? qt.queryRadius(a.x, a.y, fallbackDist) : nodes
+
+          // bounded selection: keep only the k nearest eligible neighbors,
+          // k = remaining deficit — no full sort over all nodes
+          const k = minEdgesPerNode - edgeCounts[i]
+          const nearest = [] // [j, dist], ascending, length <= k
+          for (let ci = 0; ci < candidates.length; ci++) {
+            const c = candidates[ci]
+            const j = qt ? c._index : ci
             if (j === i) continue
-            byDist.push([j, Math.hypot(a.x - nodes[j].x, a.y - nodes[j].y)])
+            const dist = Math.hypot(a.x - c.x, a.y - c.y)
+            if (dist >= fallbackDist) continue
+            if (mainPassComplete && dist < edgeMaxDist) continue // already handled in main pass
+            if (maxEdgesPerNode !== null && edgeCounts[j] >= maxEdgesPerNode) continue
+            // ties break by node index so the edge set matches the brute-force
+            // order regardless of the QuadTree's traversal order
+            let pos = nearest.length
+            while (pos > 0 && (nearest[pos - 1][1] > dist || (nearest[pos - 1][1] === dist && nearest[pos - 1][0] > j))) pos--
+            if (pos < k) {
+              nearest.splice(pos, 0, [j, dist])
+              if (nearest.length > k) nearest.pop()
+            }
           }
-          byDist.sort((x, y) => x[1] - y[1])
-          for (const [j, dist] of byDist) {
+
+          for (const [j] of nearest) {
             if (edgeCounts[i] >= minEdgesPerNode) break
             if (maxEdgesPerFrame !== null && totalEdges >= maxEdgesPerFrame) break fallbackPass
-            if (mainPassComplete && dist < edgeMaxDist) continue // already handled in main pass
-            if (dist >= fallbackDist) break
-            if (maxEdgesPerNode !== null && edgeCounts[j] >= maxEdgesPerNode) continue
             if (this._drawEdge(ctx, a, nodes[j], i, j, fallbackOpts, edgeCounts)) totalEdges++
           }
         }
