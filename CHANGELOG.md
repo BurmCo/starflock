@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `bounds` option (`'wrap' | 'solid'`, default `'wrap'`): `'solid'` bounces nodes off the world edges; both modes are switchable live via `update({ bounds })`.
+
+### Changed
+- Wrap-around no longer teleports a node once its center crosses the edge — it drifts fully out (including its glow halo) and visibly drifts back in from the opposite side.
+- The undocumented 40px fade-out zone at the world edges is gone. It parked slow-drifting stars as barely visible, flickering ghosts near the borders for minutes; nodes now stay at full brightness up to the edge.
+
 ## [0.5.0] - 2026-07-08
 
 ### Breaking

@@ -108,6 +108,7 @@ export default function Background() {
 | `nodeSizeDistribution` | `'uniform' \| 'gaussian' \| 'weighted-small'` | `'uniform'` | Size sampling distribution |
 | `nodeColorMode` | `'random' \| 'by-size' \| 'sequential' \| 'gradient' \| 'by-position'` | `'random'` | How colors are assigned |
 | `nodeSpawnRegion` | `'full' \| 'center' \| 'edges' \| fn` | `'full'` | Where nodes spawn. `fn(width, height) => {x, y}` for custom regions |
+| `bounds` | `'wrap' \| 'solid'` | `'wrap'` | World edge behavior. `wrap`: a node drifts fully out one side (including its glow halo) and drifts back in from the opposite side. `solid`: nodes bounce off the edges and stay fully visible |
 | `layout` | `Layout \| Layout[]` | — | Deterministic node placement — overrides `nodeCount` and `nodeSpawnRegion` |
 
 ### Edges
