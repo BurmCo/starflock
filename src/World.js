@@ -153,6 +153,7 @@ export class World {
     this.scrollY = 0
     this._started = false
     this._hoveredNode = null
+    this._glowCache = new Map()
     this._resizeTimer = null
     this._pausedHidden = false
     this._pausedOffscreen = false
@@ -619,6 +620,29 @@ export class World {
     if (opts.edgeStyle === 'dashed') ctx.setLineDash([])
   }
 
+  _glowSprite(color, haloR) {
+    const size = Math.ceil(haloR)
+    const key = color + '|' + size
+    let sprite = this._glowCache.get(key)
+    if (!sprite) {
+      if (this._glowCache.size >= 256) this._glowCache.clear()
+      const dpr = this._dpr ?? 1
+      const px = Math.max(2, Math.ceil(size * 2 * dpr))
+      sprite = document.createElement('canvas')
+      sprite.width = px
+      sprite.height = px
+      const sctx = sprite.getContext('2d')
+      const c = px / 2
+      const grd = sctx.createRadialGradient(c, c, 0, c, c, c)
+      grd.addColorStop(0, color)
+      grd.addColorStop(1, 'transparent')
+      sctx.fillStyle = grd
+      sctx.fillRect(0, 0, px, px)
+      this._glowCache.set(key, sprite)
+    }
+    return sprite
+  }
+
   _drawNodes(ctx, nodes, opts, width, height) {
     const drawShape = resolveShape(opts.nodeShape)
     const fadeZone = 40
@@ -644,14 +668,9 @@ export class World {
       if (opts.glowOnLargeNodes && node.r > opts.glowThreshold) {
         const haloR = node.r * opts.glowScale
         if (haloR > 0) {
-          const grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, haloR)
-          grd.addColorStop(0, node.color)
-          grd.addColorStop(1, 'transparent')
-          ctx.beginPath()
-          ctx.arc(node.x, node.y, haloR, 0, Math.PI * 2)
-          ctx.fillStyle = grd
+          const sprite = this._glowSprite(node.color, haloR)
           ctx.globalAlpha = alpha * opts.glowOpacity
-          ctx.fill()
+          ctx.drawImage(sprite, node.x - haloR, node.y - haloR, haloR * 2, haloR * 2)
         }
       }
 

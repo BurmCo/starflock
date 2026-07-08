@@ -53,3 +53,19 @@ test('reassigning node.shape takes effect on the next frame', () => {
   world.stop()
   dom.uninstall()
 })
+
+test('glow uses cached sprites — no per-frame radial gradients on the main context', () => {
+  const dom = installDom()
+  const canvas = createMockCanvas()
+  const world = new World({ canvas, nodeCount: 5, nodeSize: [3, 3], colors: ['#ffffff'] })
+  world.start()
+  canvas.ctx.calls.length = 0
+  dom.flushRaf(0)
+  dom.flushRaf(16)
+  const gradients = canvas.ctx.calls.filter(c => c.method === 'createRadialGradient').length
+  const draws = canvas.ctx.calls.filter(c => c.method === 'drawImage').length
+  assert.equal(gradients, 0, 'main context must not create gradients')
+  assert.equal(draws, 10, '5 halos per frame x 2 frames')
+  assert.equal(world._glowCache.size, 1, 'same color+size -> one sprite')
+  world.stop(); dom.uninstall()
+})
