@@ -284,7 +284,8 @@ export class World {
   }
 
   _onResize() {
-    this._resize()
+    clearTimeout(this._resizeTimer)
+    this._resizeTimer = setTimeout(() => this._resize(), 150)
   }
 
   _onMouseMove(e) {
@@ -708,6 +709,8 @@ export class World {
     this._started = false
     cancelAnimationFrame(this.raf)
     this.raf = null
+    clearTimeout(this._resizeTimer)
+    this._resizeTimer = null
     if (this._io) { this._io.disconnect(); this._io = null }
     window.removeEventListener('resize', this._onResize)
     window.removeEventListener('mousemove', this._onMouseMove)

@@ -39,3 +39,23 @@ test('the frame is translated by scrollY and clears only the viewport slice', ()
   assert.deepEqual(cr.args, [0, 1000, 1024, 768], 'clear the visible world-space slice')
   world.stop(); dom.uninstall()
 })
+
+test('resize events are debounced and rescale nodes in place', async () => {
+  const dom = installDom({ innerWidth: 1000, innerHeight: 800, scrollHeight: 2000 })
+  const world = new World({ canvas: createMockCanvas(), nodeCount: 10 })
+  world.start()
+  const nodesBefore = world.nodes
+  const node = world.nodes[0]
+  node.x = 500; node.y = 1000
+  dom.win.innerWidth = 500
+  dom.doc.documentElement.scrollHeight = 1000
+  dom.fire('window', 'resize')
+  dom.fire('window', 'resize')
+  dom.fire('window', 'resize')
+  assert.equal(node.x, 500, 'nothing happens synchronously')
+  await new Promise(resolve => setTimeout(resolve, 250))
+  assert.equal(world.nodes, nodesBefore, 'nodes are preserved, not recreated')
+  assert.equal(node.x, 250, 'x rescaled by 500/1000')
+  assert.equal(node.y, 500, 'y rescaled by 1000/2000')
+  world.stop(); dom.uninstall()
+})
