@@ -41,6 +41,8 @@ export declare const ring: ShapeFn
 
 export interface ForceContext {
   readonly time: number
+  /** normalized frame factor: 1.0 at 60fps, clamped at 50ms gaps — multiply velocity increments by this */
+  readonly dt: number
   readonly mouse: { x: number; y: number } | null
   readonly scrollY: number
   readonly width: number

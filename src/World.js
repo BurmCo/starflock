@@ -110,6 +110,9 @@ const DEFAULTS = {
   pauseWhenOffscreen: false,
 }
 
+const FRAME_MS = 1000 / 60
+const MAX_FRAME_MS = 50
+
 const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
 
 function assignOptions(target, source) {
@@ -145,6 +148,7 @@ export class World {
 
     this.nodes = []
     this.raf = null
+    this._lastTime = null
     this.mouse = null
     this.scrollY = 0
     this._started = false
@@ -328,7 +332,10 @@ export class World {
 
   _maybeResume() {
     if (!this._started || this._pausedHidden || this._pausedOffscreen) return
-    if (this.raf === null) this.raf = requestAnimationFrame(this._loop)
+    if (this.raf === null) {
+      this._lastTime = null
+      this.raf = requestAnimationFrame(this._loop)
+    }
   }
 
   _onVisibilityChange() {
@@ -655,20 +662,25 @@ export class World {
     const height = this._logicalHeight ?? canvas.height
     const opts = this.options
 
-    const context = Object.freeze({ time, mouse: this.mouse, scrollY: this.scrollY, width, height })
+    const last = this._lastTime
+    this._lastTime = time
+    const dtMs = last === null ? FRAME_MS : Math.min(Math.max(time - last, 0), MAX_FRAME_MS)
+    const dt = dtMs / FRAME_MS
+
+    const context = Object.freeze({ time, dt, mouse: this.mouse, scrollY: this.scrollY, width, height })
 
     for (const force of forces) force(nodes, context)
 
     for (const node of nodes) {
-      node.x += node.vx
-      node.y += node.vy
+      node.x += node.vx * dt
+      node.y += node.vy * dt
       if (node.x < 0) node.x += width
       if (node.x > width) node.x -= width
       if (node.y < 0) node.y += height
       if (node.y > height) node.y -= height
 
       if (opts.nodeRotation && node.angle !== undefined) {
-        node.angle += node.angularVelocity
+        node.angle += node.angularVelocity * dt
       }
     }
 
@@ -707,6 +719,7 @@ export class World {
     this._started = true
     this._pausedHidden = false
     this._pausedOffscreen = false
+    this._lastTime = null
     if (this.options.autoResize) this.scrollY = window.scrollY
     this._resize()
     if (this.options.autoResize) {
