@@ -38,7 +38,7 @@ const FORCE_DESCS = {
 const PARAM_DEFS = [
   'layout',
   'nodeCount', 'nodeSize', 'colors', 'nodeShape', 'nodeRotation',
-  'nodeColorMode', 'nodeSpawnRegion', 'nodeSizeDistribution',
+  'nodeColorMode', 'nodeSpawnRegion', 'nodeSizeDistribution', 'bounds',
   'edgeMaxDist', 'edgeMaxOpacity', 'edgeWidth', 'edgeStyle',
   'edgeCurvature', 'edgeColors', 'edgeColorMode', 'maxEdgesPerNode', 'minEdgesPerNode',
   'renderOrder', 'blendMode', 'glowOnLargeNodes', 'glowOpacity', 'glowScale', 'glowThreshold', 'background',
@@ -55,6 +55,7 @@ const PARAM_DESCS = {
   nodeColorMode:       { desc: 'How colour is assigned to nodes.',                                      options: ['random', 'sequential', 'gradient', 'by-size', 'by-position'] },
   nodeSpawnRegion:     { desc: 'Region where new nodes appear.',                                        options: ['full', 'center', 'edges'] },
   nodeSizeDistribution:{ desc: 'Distribution curve for node sizes.',                                   options: ['uniform', 'gaussian', 'weighted-small'] },
+  bounds:              { desc: 'World edge behavior: wrap drifts nodes out one side and back in from the other; solid bounces them off the edges.', options: ['wrap', 'solid'] },
   edgeMaxDist:         { desc: 'Maximum distance between nodes for an edge to be drawn.',               hint: '50 – 300' },
   edgeMaxOpacity:      { desc: 'Opacity of edges at their closest point.',                             hint: '0.0 – 1.0' },
   edgeWidth:           { desc: 'Stroke width of edges in canvas pixels.',                              hint: '0.5 – 5' },
