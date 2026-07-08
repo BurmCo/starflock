@@ -371,6 +371,8 @@ export class World {
       onNodeClick: this.options.onNodeClick,
       pauseWhenHidden: this.options.pauseWhenHidden,
       pauseWhenOffscreen: this.options.pauseWhenOffscreen,
+      autoResize: this.options.autoResize,
+      pixelRatio: this.options.pixelRatio,
     }
 
     const { forces: newForces, canvas: _canvas, ...rest } = newOptions
@@ -445,6 +447,22 @@ export class World {
       if (this._io) { this._io.disconnect(); this._io = null }
       this._pausedOffscreen = false
       this._maybeResume()
+    }
+
+    if (prev.autoResize !== opts.autoResize) {
+      if (opts.autoResize) {
+        this.scrollY = window.scrollY
+        window.addEventListener('resize', this._onResize)
+        window.addEventListener('scroll', this._onScroll, { passive: true })
+      } else {
+        window.removeEventListener('resize', this._onResize)
+        window.removeEventListener('scroll', this._onScroll)
+        clearTimeout(this._resizeTimer)
+        this._resizeTimer = null
+      }
+      this._resize()
+    } else if (prev.pixelRatio !== opts.pixelRatio && opts.autoResize) {
+      this._resize()
     }
   }
 

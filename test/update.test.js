@@ -108,6 +108,46 @@ test('update({ pauseWhenHidden: false }) while hidden-paused resumes and removes
   assert.equal(dom.listenerCount('document', 'visibilitychange'), 1)
 })
 
+test('update({ autoResize }) toggles scroll/resize listeners and re-sizes live', (t) => {
+  const dom = installDom({ innerWidth: 1024, innerHeight: 768, scrollHeight: 5000 })
+  const canvas = createMockCanvas()
+  const world = new World({ canvas })
+  t.after(() => {
+    world.stop()
+    dom.uninstall()
+  })
+  world.start()
+  assert.equal(dom.listenerCount('window', 'scroll'), 1)
+  assert.equal(dom.listenerCount('window', 'resize'), 1)
+  world.update({ autoResize: false })
+  assert.equal(dom.listenerCount('window', 'scroll'), 0)
+  assert.equal(dom.listenerCount('window', 'resize'), 0)
+  world.scrollY = 42
+  dom.win.scrollY = 999
+  dom.fire('window', 'scroll')
+  assert.equal(world.scrollY, 42, 'manual scrollY is caller-owned after the switch')
+  world.update({ autoResize: true })
+  assert.equal(dom.listenerCount('window', 'scroll'), 1)
+  assert.equal(dom.listenerCount('window', 'resize'), 1)
+  assert.equal(world.scrollY, 999, 'switching back re-seeds scrollY from the window')
+  assert.equal(canvas.width, 1024, 'backing store is viewport-sized again')
+})
+
+test('update({ pixelRatio }) re-sizes the backing store live', (t) => {
+  const dom = installDom({ innerWidth: 1024, innerHeight: 768, dpr: 1 })
+  const canvas = createMockCanvas()
+  const world = new World({ canvas })
+  t.after(() => {
+    world.stop()
+    dom.uninstall()
+  })
+  world.start()
+  assert.equal(canvas.width, 1024)
+  world.update({ pixelRatio: 2 })
+  assert.equal(canvas.width, 2048)
+  assert.equal(canvas.height, 1536)
+})
+
 test('update() with unchanged values is a no-op — no rebuild, no recolor', (t) => {
   const dom = installDom()
   const world = new World({ canvas: createMockCanvas(), nodeCount: 5, colors: ['#aa0000', '#00bb00'] })
