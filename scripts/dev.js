@@ -4,7 +4,7 @@
 
 import { createServer } from 'http'
 import { readFileSync } from 'fs'
-import { join, extname } from 'path'
+import { extname, resolve, sep } from 'path'
 
 const PORT  = process.env.PORT ?? 3000
 const ROOT  = new URL('../docs', import.meta.url).pathname
@@ -18,19 +18,29 @@ const MIME = {
   '.ico':  'image/x-icon',
 }
 
+// Containment by design: survives future changes like percent-decoding
+// (traversal was previously blocked only by WHATWG URL dot-segment normalization)
+function safeJoin(root, urlPath) {
+  const path = resolve(root, '.' + urlPath)
+  return path === root || path.startsWith(root + sep) ? path : null
+}
+
 createServer((req, res) => {
   let urlPath = new URL(req.url, 'http://localhost').pathname
   if (urlPath === '/') urlPath = '/index.html'
 
   // Serve src/* for the bare 'starflock' import map entry
   if (urlPath.startsWith('/src/')) {
-    serve(res, join(SRC, urlPath.slice('/src/'.length)))
+    const filePath = safeJoin(SRC, urlPath.slice('/src'.length))
+    if (!filePath) { res.writeHead(404); res.end('Not found'); return }
+    serve(res, filePath)
     return
   }
 
-  const filePath = join(ROOT, urlPath)
+  const filePath = safeJoin(ROOT, urlPath)
+  if (!filePath) { res.writeHead(404); res.end('Not found'); return }
   serve(res, filePath, urlPath === '/index.html' ? patch : null)
-}).listen(PORT, () => {
+}).listen(PORT, '127.0.0.1', () => {
   console.log(`starflock dev  →  http://localhost:${PORT}`)
 })
 
