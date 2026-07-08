@@ -10,15 +10,15 @@ const FORCE_FNS = { drift, dampen, twinkle, mouseRepel, scrollDrift, gravity, wi
 
 // Keys must match FORCE_FNS exactly
 const FORCE_DEFS = {
-  drift:       [{ key: 'maxSpeed',  default: 0.5,    hint: '0.1 – 2.0' }, { key: 'minSpeed', default: 0.008, hint: '0.001 – 0.5' }],
-  dampen:      [{ key: 'factor',    default: 0.98,   hint: '0.9 – 0.999' }],
+  drift:       [{ key: 'maxSpeed',  default: 0.08,   hint: '0.01 – 0.5' }, { key: 'minSpeed', default: 0.008, hint: '0.001 – 0.5' }],
+  dampen:      [{ key: 'factor',    default: 0.99,   hint: '0.9 – 0.999' }],
   twinkle:     [{ key: 'variance',  default: 0.5,    hint: '0.0 – 1.0' }, { key: 'minBrightness', default: 0.5, hint: '0.0 – 1.0' }],
-  mouseRepel:  [{ key: 'radius',    default: 100,    hint: '50 – 300' }, { key: 'strength', default: 0.01, hint: '0.001 – 0.05' }, { key: 'mode', default: 'repel', options: ['repel', 'attract', 'orbit'] }],
-  wind:        [{ key: 'angle',     default: 0,      hint: '0 – 360' },  { key: 'strength', default: 0.001, hint: '0.0001 – 0.01' }, { key: 'gust', default: 0, hint: '0.0 – 1.0' }],
-  gravity:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'strength', default: 0.0005, hint: '0.0001 – 0.005' }],
-  nodeRepel:   [{ key: 'radius',    default: 40,     hint: '10 – 150' },  { key: 'strength', default: 0.003, hint: '0.001 – 0.02' }],
-  noise:       [{ key: 'scale',     default: 0.004,  hint: '0.001 – 0.02' }, { key: 'strength', default: 0.001, hint: '0.0001 – 0.005' }, { key: 'speed', default: 0.0003, hint: '0.0001 – 0.002' }],
-  attract:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'radius', default: 250, hint: '50 – 500' }, { key: 'strength', default: 0.003, hint: '0.0005 – 0.01' }],
+  mouseRepel:  [{ key: 'radius',    default: 120,    hint: '50 – 300' }, { key: 'strength', default: 0.012, hint: '0.001 – 0.05' }, { key: 'mode', default: 'repel', options: ['repel', 'attract', 'orbit'] }],
+  wind:        [{ key: 'angle',     default: 0,      hint: '0 – 360' },  { key: 'strength', default: 0.0005, hint: '0.0001 – 0.01' }, { key: 'gust', default: 0, hint: '0.0 – 1.0' }],
+  gravity:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'strength', default: 0.0003, hint: '0.0001 – 0.005' }],
+  nodeRepel:   [{ key: 'radius',    default: 60,     hint: '10 – 150' },  { key: 'strength', default: 0.002, hint: '0.001 – 0.02' }],
+  noise:       [{ key: 'scale',     default: 0.003,  hint: '0.001 – 0.02' }, { key: 'strength', default: 0.0008, hint: '0.0001 – 0.005' }, { key: 'speed', default: 0.0005, hint: '0.0001 – 0.002' }],
+  attract:     [{ key: 'x',        default: 0.5,    hint: '0.0 – 1.0' }, { key: 'y', default: 0.5, hint: '0.0 – 1.0' }, { key: 'radius', default: 200, hint: '50 – 500' }, { key: 'strength', default: 0.001, hint: '0.0005 – 0.01' }],
   scrollDrift: [{ key: 'mode',     default: 'rotate', options: ['rotate', 'wave', 'scatter'] }, { key: 'strength', default: 1, hint: '0.1 – 5' }],
 }
 
@@ -32,7 +32,7 @@ const FORCE_DESCS = {
   nodeRepel:   'Nodes push each other away when closer than radius, preventing pileups.',
   noise:       'Steers nodes along a slow-moving Perlin noise field for organic flow.',
   attract:     'Pulls nodes within radius toward a normalised point, like gravity with a cutoff.',
-  scrollDrift: 'Shifts nodes when the page is scrolled — wave mode pulses, shift mode translates.',
+  scrollDrift: 'Shifts nodes when the page is scrolled — rotate spins around the center, wave pulses, scatter pushes outward.',
 }
 
 const PARAM_DEFS = [
@@ -51,7 +51,7 @@ const PARAM_DESCS = {
   nodeSize:            { desc: 'Base radius of each node in canvas pixels.',                            hint: '1 – 20' },
   colors:              { desc: 'Array of hex colours nodes are randomly drawn from.',                   isColorArray: true },
   nodeShape:           { desc: 'Shape used to render nodes.',                                           options: ['circle', 'ring', 'diamond', 'star', 'cross'] },
-  nodeRotation:        { desc: 'Rotation angle applied to non-circular node shapes (radians).',         hint: '0 – 6.28' },
+  nodeRotation:        { desc: 'Nodes spin with a random angular velocity — visible on non-circular shapes.', options: ['false', 'true'] },
   nodeColorMode:       { desc: 'How colour is assigned to nodes.',                                      options: ['random', 'sequential', 'gradient', 'by-size', 'by-position'] },
   nodeSpawnRegion:     { desc: 'Region where new nodes appear.',                                        options: ['full', 'center', 'edges'] },
   nodeSizeDistribution:{ desc: 'Distribution curve for node sizes.',                                   options: ['uniform', 'gaussian', 'weighted-small'] },
