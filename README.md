@@ -119,7 +119,7 @@ export default function Background() {
 | `edgeMaxOpacity` | `number` | `0.18` | Max edge opacity |
 | `edgeWidth` | `number` | `0.5` | Edge stroke width in px |
 | `edgeColors` | `string[]` | `null` | Edge colors — falls back to `colors` if not set |
-| `edgeStyle` | `'solid' \| 'dashed' \| 'gradient'` | `'solid'` | `gradient` interpolates between connected node colors |
+| `edgeStyle` | `'solid' \| 'dashed' \| 'gradient'` | `'solid'` | `gradient` interpolates between connected node colors — creates a gradient per edge per frame, the most expensive style |
 | `edgeColorMode` | `'alternate' \| 'source' \| 'target' \| fn` | `'alternate'` | `fn(a, b, i, j) => color` for custom logic |
 | `edgeCurvature` | `number` | `0` | `0` = straight, `1` = strong bezier curve |
 | `maxEdgesPerNode` | `number \| null` | `null` | Cap connections per node — prevents dense clusters |
@@ -149,7 +149,7 @@ export default function Background() {
 |---|---|---|---|
 | `pauseWhenHidden` | `boolean` | `true` | Pause RAF when tab is not visible |
 | `pauseWhenOffscreen` | `boolean` | `false` | Pause RAF when canvas is scrolled out of view |
-| `autoResize` | `boolean` | `true` | Fit canvas to window on resize — set to `false` when managing canvas size yourself |
+| `autoResize` | `boolean` | `true` | Viewport-sized canvas that tracks page scroll internally — style it `position: fixed; top: 0; left: 0`. Nodes are distributed over the full page height. Set to `false` to manage canvas size and `world.scrollY` yourself |
 | `maxEdgesPerFrame` | `number \| null` | `null` | Hard cap on edges drawn per frame — useful for very high node counts |
 | `spatialIndex` | `boolean` | `false` | Use a QuadTree for edge queries — O(n log n) instead of O(n²), worth enabling above ~200 nodes |
 
@@ -259,7 +259,7 @@ new World({ canvas, ...presets.orion(), edgeMaxOpacity: 0.8 }).start()
 
 ## Forces
 
-Forces are plain functions — `(nodes, context) => void`. The `context` object provides `{ time, mouse, scrollY, width, height }`. Combine freely.
+Forces are plain functions — `(nodes, context) => void`. The `context` object provides `{ time, dt, mouse, scrollY, width, height }`. Combine freely.
 
 ### `drift({ maxSpeed, minSpeed })`
 Clamps node speed into `[minSpeed, maxSpeed]`. The floor keeps the field alive — nodes spawn with zero velocity and stationary nodes get a random direction. Use as the last force in your chain.
@@ -340,7 +340,7 @@ Moves nodes along a slowly shifting 2D vector field. Nearby nodes flow in the sa
 | `speed` | `0.0005` | How fast the field shifts over time |
 
 ### `scrollDrift({ mode, strength })`
-Reacts to `world.scrollY`. In `autoResize` mode this tracks `window.scrollY` automatically.
+Reacts to `world.scrollY`, which is tracked automatically when `autoResize` is on (set it yourself when `autoResize: false`).
 
 | Param | Default | |
 |---|---|---|
@@ -354,13 +354,15 @@ Reacts to `world.scrollY`. In `autoResize` mode this tracks `window.scrollY` aut
 
 Any function matching `(nodes, context) => void` works as a force:
 
+The `context` provides `{ time, dt, mouse, scrollY, width, height }`. Multiply velocity increments by `context.dt` (1.0 at 60fps) to stay frame-rate independent.
+
 ```js
 function pulse() {
-  return (nodes, { time }) => {
+  return (nodes, { time, dt }) => {
     const scale = Math.sin(time * 0.001)
     for (const node of nodes) {
-      node.vx += (node.x - 400) * scale * 0.0001
-      node.vy += (node.y - 300) * scale * 0.0001
+      node.vx += (node.x - 400) * scale * 0.0001 * dt
+      node.vy += (node.y - 300) * scale * 0.0001 * dt
     }
   }
 }
@@ -391,6 +393,8 @@ function triangle(ctx, x, y, r) {
 new World({ canvas, nodeShape: triangle })
 ```
 
+Each node also has an optional `shape` (name or function) that overrides the world-level `nodeShape` — set it e.g. in `onFrame` or `onNodeHover`. The built-in `star` accepts an extra point count: `star(ctx, x, y, r, points = 5)`.
+
 ---
 
 ## API
@@ -402,17 +406,17 @@ Begins the render loop and registers event listeners.
 Cancels the render loop and removes all event listeners.
 
 ### `world.update(options)`
-Live-updates any option without restarting. Node positions and velocities are preserved.
+Live-updates any option without restarting. `colors`/`nodeColorMode` recolor existing nodes in place (positions and velocities preserved); `nodeCount`, `nodeSize`, `nodeSizeDistribution`, `nodeSpawnRegion`, `nodeRotation` and `layout` recreate the nodes; listener options (`onNodeClick`, `pauseWhenHidden`, `pauseWhenOffscreen`) are wired up and torn down live. A memoized `forces` array is kept when element-wise identical.
 
 ```js
 world.update({ colors: ['#ff0000'], edgeMaxOpacity: 0.4 })
 ```
 
 ### `world.resize()`
-Recomputes canvas dimensions and recreates nodes. Call this when managing canvas size manually (`autoResize: false`).
+Recomputes canvas dimensions and rescales existing node positions proportionally (nodes are only recreated when a `layout` is set). Call this when managing canvas size manually (`autoResize: false`).
 
 ### `world.scrollY`
-Set directly when managing scroll manually (e.g. in a bounded canvas):
+With `autoResize: true` scroll is tracked automatically. With `autoResize: false` set it yourself (e.g. in a bounded canvas):
 ```js
 window.addEventListener('scroll', () => { world.scrollY = window.scrollY })
 ```
