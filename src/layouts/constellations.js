@@ -5,57 +5,62 @@
  * scale: size relative to Math.min(width, height), 0..1 (default 0.7)
  * cx:    horizontal center, relative to width (default 0.5)
  * cy:    vertical center, relative to height (default 0.5)
+ *
+ * Coordinates are projected from J2000 RA/Dec (east left, north up, RA
+ * compressed by cos of the mid declination) preserving the true sky aspect
+ * ratio: the longer axis spans 0.10–0.90, the shorter one is centered.
+ * test/layouts.test.js guards the aspect per constellation.
  */
 
 const STARS = {
   'orion': [
-    [0.10, 0.10],  // Betelgeuse  (α: RA 05h 55m, Dec +07°) left shoulder
-    [0.69, 0.15],  // Bellatrix   (γ: RA 05h 25m, Dec +06°) right shoulder
-    [0.38, 0.54],  // Alnitak     (ζ: RA 05h 41m, Dec −02°) belt left  (east end)
-    [0.47, 0.50],  // Alnilam     (ε: RA 05h 36m, Dec −01°) belt center
-    [0.56, 0.46],  // Mintaka     (δ: RA 05h 32m, Dec −00°) belt right (west end)
-    [0.25, 0.90],  // Saiph       (κ: RA 05h 48m, Dec −10°) left foot
-    [0.90, 0.83],  // Rigel       (β: RA 05h 15m, Dec −08°) right foot
+    [0.26, 0.10],  // Betelgeuse  (α: RA 05h 55m, Dec +07°) left shoulder
+    [0.61, 0.15],  // Bellatrix   (γ: RA 05h 25m, Dec +06°) right shoulder
+    [0.43, 0.54],  // Alnitak     (ζ: RA 05h 41m, Dec −02°) belt left  (east end)
+    [0.48, 0.50],  // Alnilam     (ε: RA 05h 36m, Dec −01°) belt center
+    [0.53, 0.46],  // Mintaka     (δ: RA 05h 32m, Dec −00°) belt right (west end)
+    [0.35, 0.90],  // Saiph       (κ: RA 05h 48m, Dec −10°) left foot
+    [0.74, 0.83],  // Rigel       (β: RA 05h 15m, Dec −08°) right foot
   ],
   'big-dipper': [
-    [0.89, 0.10],  // Dubhe  (α: RA 11h 04m, Dec +62°) bowl top-right
-    [0.90, 0.45],  // Merak  (β: RA 11h 02m, Dec +56°) bowl bottom-right
-    [0.65, 0.62],  // Phecda (γ: RA 11h 54m, Dec +54°) bowl bottom-left
-    [0.54, 0.40],  // Megrez (δ: RA 12h 15m, Dec +57°) bowl top-left / handle start
-    [0.36, 0.47],  // Alioth (ε: RA 12h 54m, Dec +56°) handle 1
-    [0.21, 0.54],  // Mizar  (ζ: RA 13h 24m, Dec +55°) handle 2
-    [0.10, 0.90],  // Alkaid (η: RA 13h 48m, Dec +49°) handle end
+    [0.89, 0.29],  // Dubhe  (α: RA 11h 04m, Dec +62°) bowl top-right
+    [0.90, 0.47],  // Merak  (β: RA 11h 02m, Dec +56°) bowl bottom-right
+    [0.65, 0.56],  // Phecda (γ: RA 11h 54m, Dec +54°) bowl bottom-left
+    [0.54, 0.45],  // Megrez (δ: RA 12h 15m, Dec +57°) bowl top-left / handle start
+    [0.36, 0.49],  // Alioth (ε: RA 12h 54m, Dec +56°) handle 1
+    [0.21, 0.52],  // Mizar  (ζ: RA 13h 24m, Dec +55°) handle 2
+    [0.10, 0.71],  // Alkaid (η: RA 13h 48m, Dec +49°) handle end
   ],
   'cassiopeia': [
-    [0.90, 0.61],  // Caph    (β: RA 00h 09m, Dec +59°) far right
-    [0.66, 0.90],  // Schedar (α: RA 00h 41m, Dec +57°) second, low
-    [0.54, 0.43],  // Gamma   (γ: RA 00h 57m, Dec +61°) middle, high — peak of W
-    [0.32, 0.48],  // Ruchbah (δ: RA 01h 26m, Dec +60°) fourth
-    [0.10, 0.10],  // Segin   (ε: RA 01h 54m, Dec +64°) far left, high
+    [0.90, 0.56],  // Caph    (β: RA 00h 09m, Dec +59°) far right
+    [0.66, 0.72],  // Schedar (α: RA 00h 41m, Dec +57°) second, low
+    [0.54, 0.46],  // Gamma   (γ: RA 00h 57m, Dec +61°) middle, high — peak of W
+    [0.32, 0.49],  // Ruchbah (δ: RA 01h 26m, Dec +60°) fourth
+    [0.10, 0.28],  // Segin   (ε: RA 01h 54m, Dec +64°) far left, high
   ],
   'crux': [
-    [0.51, 0.10],  // Gacrux (γ: RA 12h 31m, Dec −57°) top    (northernmost)
-    [0.10, 0.44],  // Mimosa (β: RA 12h 48m, Dec −60°) left   (east arm)
-    [0.62, 0.90],  // Acrux  (α: RA 12h 27m, Dec −63°) bottom (southernmost)
-    [0.90, 0.32],  // Imai   (δ: RA 12h 15m, Dec −59°) right  (west arm)
+    [0.50, 0.10],  // Gacrux (γ: RA 12h 31m, Dec −57°) top    (northernmost)
+    [0.23, 0.44],  // Mimosa (β: RA 12h 48m, Dec −60°) left   (east arm)
+    [0.58, 0.90],  // Acrux  (α: RA 12h 27m, Dec −63°) bottom (southernmost)
+    [0.77, 0.32],  // Imai   (δ: RA 12h 15m, Dec −59°) right  (west arm)
   ],
   'cygnus': [
-    [0.15, 0.10],  // Deneb   (α: RA 20h 41m, Dec +45°) upper-left  — top of long arm (NE)
-    [0.35, 0.33],  // Sadr    (γ: RA 20h 22m, Dec +40°) center
-    [0.90, 0.90],  // Albireo (β: RA 19h 31m, Dec +28°) lower-right — bottom of long arm (SW)
-    [0.10, 0.62],  // Gienah  (ε: RA 20h 46m, Dec +34°) lower-left  — east wing
-    [0.75, 0.11],  // Delta   (δ: RA 19h 45m, Dec +45°) upper-right — west wing
+    [0.19, 0.10],  // Deneb   (α: RA 20h 41m, Dec +45°) upper-left  — top of long arm (NE)
+    [0.37, 0.33],  // Sadr    (γ: RA 20h 22m, Dec +40°) center
+    [0.85, 0.90],  // Albireo (β: RA 19h 31m, Dec +28°) lower-right — bottom of long arm (SW)
+    [0.15, 0.62],  // Gienah  (ε: RA 20h 46m, Dec +34°) lower-left  — east wing
+    [0.72, 0.11],  // Delta   (δ: RA 19h 45m, Dec +45°) upper-right — west wing
   ],
   'leo': [
-    [0.75, 0.90],  // Regulus  (α: RA 10h 08m, Dec +12°) base of sickle
-    [0.76, 0.63],  // Eta      (η: RA 10h 07m, Dec +17°) sickle
-    [0.68, 0.45],  // Algieba  (γ: RA 10h 20m, Dec +20°) sickle — body junction
-    [0.70, 0.25],  // Adhafera (ζ: RA 10h 17m, Dec +23°) sickle upper
-    [0.86, 0.10],  // Mu       (μ: RA 09h 53m, Dec +26°) hook apex  (northernmost)
-    [0.90, 0.23],  // Epsilon  (ε: RA 09h 46m, Dec +24°) hook tip   (westernmost)
-    [0.10, 0.75],  // Denebola (β: RA 11h 49m, Dec +15°) tail — far left
-    [0.33, 0.41],  // Zosma    (δ: RA 11h 14m, Dec +21°) body / hip
-    [0.33, 0.70],  // Theta    (θ: RA 11h 14m, Dec +15°) hindquarters
+    [0.75, 0.69],  // Regulus  (α: RA 10h 08m, Dec +12°) base of sickle
+    [0.76, 0.56],  // Eta      (η: RA 10h 07m, Dec +17°) sickle
+    [0.68, 0.48],  // Algieba  (γ: RA 10h 20m, Dec +20°) sickle — body junction
+    [0.70, 0.38],  // Adhafera (ζ: RA 10h 17m, Dec +23°) sickle upper
+    [0.86, 0.31],  // Mu       (μ: RA 09h 53m, Dec +26°) hook apex  (northernmost)
+    [0.90, 0.37],  // Epsilon  (ε: RA 09h 46m, Dec +24°) hook tip   (westernmost)
+    [0.10, 0.62],  // Denebola (β: RA 11h 49m, Dec +15°) tail — far left
+    [0.33, 0.46],  // Zosma    (δ: RA 11h 14m, Dec +21°) body / hip
+    [0.33, 0.60],  // Theta    (θ: RA 11h 14m, Dec +15°) hindquarters
   ],
 }
 

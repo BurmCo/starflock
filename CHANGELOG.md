@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Constellation layouts now preserve each constellation's true sky aspect ratio (projected from J2000 RA/Dec with cos-declination compression). Previously every constellation was stretched to a square, which squashed Leo, the Big Dipper and Cassiopeia vertically and widened Orion and Crux.
+
 ## [0.6.0] - 2026-07-08
 
 ### Added
