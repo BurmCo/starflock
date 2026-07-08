@@ -687,11 +687,13 @@ export class World {
     this._started = true
     this._pausedHidden = false
     this._pausedOffscreen = false
-    this.scrollY = window.scrollY
+    if (this.options.autoResize) this.scrollY = window.scrollY
     this._resize()
-    window.addEventListener('resize', this._onResize)
+    if (this.options.autoResize) {
+      window.addEventListener('resize', this._onResize)
+      window.addEventListener('scroll', this._onScroll, { passive: true })
+    }
     window.addEventListener('mousemove', this._onMouseMove)
-    window.addEventListener('scroll', this._onScroll, { passive: true })
     if (this.options.pauseWhenHidden) {
       document.addEventListener('visibilitychange', this._onVisibilityChange)
     }

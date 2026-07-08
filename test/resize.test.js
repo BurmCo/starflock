@@ -59,3 +59,16 @@ test('resize events are debounced and rescale nodes in place', async () => {
   assert.equal(node.y, 500, 'y rescaled by 1000/2000')
   world.stop(); dom.uninstall()
 })
+
+test('autoResize: false — no scroll/resize listeners; manual scrollY is respected', () => {
+  const dom = installDom()
+  const world = new World({ canvas: createMockCanvas({ width: 400, height: 300 }), autoResize: false })
+  world.start()
+  assert.equal(dom.listenerCount('window', 'scroll'), 0)
+  assert.equal(dom.listenerCount('window', 'resize'), 0)
+  world.scrollY = 42
+  dom.win.scrollY = 999
+  dom.fire('window', 'scroll')
+  assert.equal(world.scrollY, 42, 'manual scrollY must not be clobbered')
+  world.stop(); dom.uninstall()
+})
