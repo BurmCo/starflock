@@ -1,6 +1,6 @@
 {
   "name": "starflock",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Lightweight, zero-dependency canvas particle library. Composable forces, configurable everything.",
   "keywords": [
     "canvas",

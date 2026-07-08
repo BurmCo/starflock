@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-08
+
 ### Added
 - `bounds` option (`'wrap' | 'solid'`, default `'wrap'`): `'solid'` bounces nodes off the world edges; both modes are switchable live via `update({ bounds })`.
 
