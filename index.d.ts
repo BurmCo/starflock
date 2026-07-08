@@ -78,6 +78,8 @@ export interface WorldOptions {
   edges?: Array<[number, number]> | null
   // Shape
   nodeShape?: string | ShapeFn
+  // Bounds
+  bounds?: 'wrap' | 'solid'
   // Glow
   glowOnLargeNodes?: boolean
   glowThreshold?: number

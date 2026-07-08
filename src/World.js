@@ -51,6 +51,13 @@ function spawnPosition(spawnRegion, width, height) {
   return { x: Math.random() * width, y: Math.random() * height }
 }
 
+// how far a node reaches beyond its center: body radius, or the glow halo when it applies
+function visualRadius(node, opts) {
+  return opts.glowOnLargeNodes && node.r > opts.glowThreshold
+    ? Math.max(node.r, node.r * opts.glowScale)
+    : node.r
+}
+
 const DEFAULTS = {
   // Nodes
   nodeCount: 60,
@@ -75,6 +82,10 @@ const DEFAULTS = {
 
   // Node shape
   nodeShape: 'circle',
+
+  // Boundary behavior: 'wrap' — a node fully exits one side and drifts back in
+  // from the opposite side; 'solid' — nodes bounce off the world edges
+  bounds: 'wrap',
 
   // Glow
   glowOnLargeNodes: true,
@@ -550,7 +561,14 @@ export class World {
       let qt = null
       mainPass: {
         if (spatialIndex) {
-          qt = new QuadTree(-1, -1, width + 2, height + 2)
+          // pad the bounds by the largest wrap margin so nodes drifting
+          // outside the world don't fall out of the index
+          let pad = 1
+          for (const node of nodes) {
+            const m = visualRadius(node, opts) + 1
+            if (m > pad) pad = m
+          }
+          qt = new QuadTree(-pad, -pad, width + 2 * pad, height + 2 * pad)
           for (const node of nodes) qt.insert(node)
 
           for (let i = 0; i < nodes.length; i++) {
@@ -645,17 +663,9 @@ export class World {
 
   _drawNodes(ctx, nodes, opts, width, height) {
     const drawShape = resolveShape(opts.nodeShape)
-    const fadeZone = 40
 
     for (const node of nodes) {
-      const edgeFade = Math.min(
-        node.x / fadeZone,
-        (width - node.x) / fadeZone,
-        node.y / fadeZone,
-        (height - node.y) / fadeZone,
-        1
-      )
-      const alpha = (node.brightness ?? 1) * edgeFade
+      const alpha = node.brightness ?? 1
       let shape = drawShape
       if (node.shape) {
         if (node._shapeKey !== node.shape) {
@@ -709,10 +719,35 @@ export class World {
     for (const node of nodes) {
       node.x += node.vx * dt
       node.y += node.vy * dt
-      if (node.x < 0) node.x += width
-      if (node.x > width) node.x -= width
-      if (node.y < 0) node.y += height
-      if (node.y > height) node.y -= height
+      if (opts.bounds === 'solid') {
+        // walls sit at r so the node stays fully visible; clamp the position
+        // unconditionally (so nodes stranded outside re-enter) but flip the
+        // velocity only when it points outward
+        const r = node.r
+        if (node.x < r) {
+          node.x = r
+          if (node.vx < 0) node.vx = -node.vx
+        } else if (node.x > width - r) {
+          node.x = width - r
+          if (node.vx > 0) node.vx = -node.vx
+        }
+        if (node.y < r) {
+          node.y = r
+          if (node.vy < 0) node.vy = -node.vy
+        } else if (node.y > height - r) {
+          node.y = height - r
+          if (node.vy > 0) node.vy = -node.vy
+        }
+      } else {
+        // torus with a per-node margin: teleport only once the node (incl.
+        // glow halo) is fully outside, and re-enter just outside the far edge
+        // so it visibly drifts back in
+        const m = visualRadius(node, opts)
+        if (node.x < -m) node.x += width + 2 * m
+        else if (node.x > width + m) node.x -= width + 2 * m
+        if (node.y < -m) node.y += height + 2 * m
+        else if (node.y > height + m) node.y -= height + 2 * m
+      }
 
       if (opts.nodeRotation && node.angle !== undefined) {
         node.angle += node.angularVelocity * dt

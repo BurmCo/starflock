@@ -17,7 +17,11 @@ export function createMockContext() {
   ctx.createRadialGradient = (...args) => { calls.push({ method: 'createRadialGradient', args }); return gradient() }
   ctx.fillStyle = '#000000'
   ctx.strokeStyle = '#000000'
-  ctx.globalAlpha = 1
+  let globalAlpha = 1
+  Object.defineProperty(ctx, 'globalAlpha', {
+    get: () => globalAlpha,
+    set: (v) => { globalAlpha = v; calls.push({ method: 'set:globalAlpha', args: [v] }) },
+  })
   ctx.lineWidth = 1
   ctx.globalCompositeOperation = 'source-over'
   return ctx
