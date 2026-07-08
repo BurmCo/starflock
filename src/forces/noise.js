@@ -15,6 +15,9 @@ function buildTable() {
 const latticeX = (ix, iy) => TABLE[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2]
 const latticeY = (ix, iy) => TABLE[((ix & (GRID - 1)) + (iy & (GRID - 1)) * GRID) * 2 + 1]
 
+// shared scratch — forces run synchronously, the value is consumed immediately
+const OUT = { nx: 0, ny: 0 }
+
 // Smoothstep for bilinear interpolation weight
 const smooth = (t) => t * t * (3 - 2 * t)
 
@@ -49,10 +52,8 @@ export function noise({ scale = 0.003, strength = 0.0008, speed = 0.0005 } = {})
     const y01 = latticeY(ix,     iy + 1)
     const y11 = latticeY(ix + 1, iy + 1)
 
-    const nx = (x00 + (x10 - x00) * ux + (x01 - x00) * uy + (x11 - x10 - x01 + x00) * ux * uy) * 2 - 1
-    const ny = (y00 + (y10 - y00) * ux + (y01 - y00) * uy + (y11 - y10 - y01 + y00) * ux * uy) * 2 - 1
-
-    return { nx, ny }
+    OUT.nx = (x00 + (x10 - x00) * ux + (x01 - x00) * uy + (x11 - x10 - x01 + x00) * ux * uy) * 2 - 1
+    OUT.ny = (y00 + (y10 - y00) * ux + (y01 - y00) * uy + (y11 - y10 - y01 + y00) * ux * uy) * 2 - 1
   }
 
   return (nodes, { time, dt = 1 }) => {
@@ -62,10 +63,10 @@ export function noise({ scale = 0.003, strength = 0.0008, speed = 0.0005 } = {})
       const wx = node.x * scale + offset
       const wy = node.y * scale + offset
 
-      const { nx, ny } = valueNoiseVec(wx, wy)
+      valueNoiseVec(wx, wy)
 
-      node.vx += nx * strength * dt
-      node.vy += ny * strength * dt
+      node.vx += OUT.nx * strength * dt
+      node.vy += OUT.ny * strength * dt
     }
   }
 }

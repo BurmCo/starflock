@@ -22,3 +22,14 @@ test('noise() construction is allocation-light (table shared at module scope)', 
   const ms = Number(process.hrtime.bigint() - t0) / 1e6
   assert.ok(ms < 200, `200 constructions took ${ms}ms — table is not shared`)
 })
+
+test('refactored noise produces identical vectors for identical inputs', () => {
+  // baseline snapshot captured from the pre-refactor implementation (2026-07-08)
+  const force = noise({ scale: 0.003, strength: 0.0008, speed: 0.0005 })
+  const node = { x: 137, y: 512, vx: 0, vy: 0 }
+  force([node], { time: 1000, dt: 1 })
+  const EXPECTED_VX = -0.00007425992159166058
+  const EXPECTED_VY = 0.00039353736825700384
+  assert.equal(node.vx, EXPECTED_VX)
+  assert.equal(node.vy, EXPECTED_VY)
+})
