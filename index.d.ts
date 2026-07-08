@@ -35,7 +35,7 @@ export declare function resolveShape(shape: string | ShapeFn): ShapeFn
 
 export declare const circle: ShapeFn
 export declare const diamond: ShapeFn
-export declare const star: ShapeFn
+export declare const star: (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, points?: number) => void
 export declare const cross: ShapeFn
 export declare const ring: ShapeFn
 
@@ -103,9 +103,13 @@ export interface WorldOptions {
 
 export declare class World {
   canvas: HTMLCanvasElement
+  ctx: CanvasRenderingContext2D
   nodes: Node[]
   forces: Force[]
-  options: WorldOptions
+  options: Omit<WorldOptions, 'canvas' | 'forces'>
+  mouse: { x: number; y: number } | null
+  scrollY: number
+  raf: number | null
   constructor(opts: WorldOptions)
   start(): void
   stop(): void
@@ -180,9 +184,6 @@ export interface AttractOptions {
   strength?: number
 }
 export declare function attract(opts?: AttractOptions): Force
-
-// React adapter
-export declare function useStarflock(options?: Omit<WorldOptions, 'canvas'>): import('react').RefObject<HTMLCanvasElement>
 
 // Layouts namespace
 export declare namespace layouts {
