@@ -261,12 +261,13 @@ new World({ canvas, ...presets.orion(), edgeMaxOpacity: 0.8 }).start()
 
 Forces are plain functions — `(nodes, context) => void`. The `context` object provides `{ time, mouse, scrollY, width, height }`. Combine freely.
 
-### `drift({ maxSpeed })`
-Caps node velocity — prevents runaway acceleration. Use as the last force in your chain.
+### `drift({ maxSpeed, minSpeed })`
+Clamps node speed into `[minSpeed, maxSpeed]`. The floor keeps the field alive — nodes spawn with zero velocity and stationary nodes get a random direction. Use as the last force in your chain.
 
 | Param | Default | |
 |---|---|---|
 | `maxSpeed` | `0.08` | Maximum speed in px/frame |
+| `minSpeed` | `0.008` | Minimum speed in px/frame — source of the ambient motion |
 
 ### `dampen({ factor })`
 Multiplies all velocities by `factor` each frame — simulates friction.
@@ -294,7 +295,7 @@ Cursor interaction.
 | `fn` | — | `fn(node, mouse, context)` when `mode: 'custom'` |
 
 ### `gravity({ x, y, strength })`
-Pulls all nodes toward a fixed point. Values `0..1` are relative to canvas size.
+Pulls all nodes toward a fixed point with an approximately constant-magnitude force (no distance falloff, no singularity at the target). `x`/`y` accept values `0..1` (relative to canvas size), larger values (absolute pixels), or a function `(context) => number` evaluated each frame.
 
 | Param | Default | |
 |---|---|---|
@@ -303,7 +304,7 @@ Pulls all nodes toward a fixed point. Values `0..1` are relative to canvas size.
 | `strength` | `0.0003` | Force magnitude |
 
 ### `attract({ x, y, radius, strength })`
-Like gravity but only affects nodes within `radius`. Has a dead zone at the center — combine with `nodeRepel` to prevent clustering.
+Constant-magnitude pull on nodes between 20px and `radius` from the target (hard cutoffs at both bounds, no falloff). The 20px dead zone prevents clustering at the center — combine with `nodeRepel` for smoother packing. `x`/`y` accept `0..1` (relative), absolute pixels, or `(width, height) => number` — note the function signature differs from gravity's, which receives the force context.
 
 | Param | Default | |
 |---|---|---|

@@ -1,5 +1,5 @@
 /**
- * attract — pulls nodes toward a point, but only within a radius (falloff to zero at edge)
+ * attract — pulls nodes toward a point, but only within a radius (constant pull, hard cutoff at both bounds)
  *
  * Unlike gravity (which always pulls), attract only affects nodes within radius.
  *

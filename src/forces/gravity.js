@@ -3,8 +3,8 @@
  *
  * x, y:     target — fraction 0..1 (relative to canvas size), absolute px if outside that range,
  *           or a function (context) => number evaluated each frame
- * strength: force multiplier (default 0.0003) — weakens with distance,
- *           never reaches zero (no singularity at the target point)
+ * strength: force multiplier (default 0.0003) — approximately constant pull
+ *           regardless of distance (no singularity at the target point)
  */
 export function gravity({ x = 0.5, y = 0.5, strength = 0.0003 } = {}) {
   return (nodes, context) => {
