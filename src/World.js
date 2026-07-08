@@ -651,13 +651,19 @@ export class World {
       }
     }
 
+    const dpr = this._dpr ?? 1
+    const scrollOffset = opts.autoResize ? this.scrollY : 0
+    const viewportHeight = this._viewportHeight ?? height
+
+    // world space -> device space: scale by dpr, shift the visible slice up
+    ctx.setTransform(dpr, 0, 0, dpr, 0, -scrollOffset * dpr)
     ctx.globalCompositeOperation = opts.blendMode
-    ctx.clearRect(0, 0, width, height)
+    ctx.clearRect(0, scrollOffset, width, viewportHeight)
 
     if (opts.background) {
       ctx.globalAlpha = 1
       ctx.fillStyle = opts.background
-      ctx.fillRect(0, 0, width, height)
+      ctx.fillRect(0, scrollOffset, width, viewportHeight)
     }
 
     if (opts.renderOrder === 'nodes-first') {

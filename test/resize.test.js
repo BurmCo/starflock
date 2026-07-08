@@ -24,3 +24,18 @@ test('nodes spawn across the full document height', () => {
   assert.ok(world.nodes.every(n => n.y <= 10000))
   world.stop(); dom.uninstall()
 })
+
+test('the frame is translated by scrollY and clears only the viewport slice', () => {
+  const dom = installDom({ innerWidth: 1024, innerHeight: 768, scrollHeight: 5000, scrollY: 0, dpr: 2 })
+  const canvas = createMockCanvas()
+  const world = new World({ canvas })
+  world.start()
+  world.scrollY = 1000
+  canvas.ctx.calls.length = 0
+  dom.flushRaf(0)
+  const st = canvas.ctx.calls.find(c => c.method === 'setTransform')
+  assert.deepEqual(st.args, [2, 0, 0, 2, 0, -2000], 'translate by -scrollY * dpr')
+  const cr = canvas.ctx.calls.find(c => c.method === 'clearRect')
+  assert.deepEqual(cr.args, [0, 1000, 1024, 768], 'clear the visible world-space slice')
+  world.stop(); dom.uninstall()
+})
