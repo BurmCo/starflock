@@ -19,13 +19,21 @@
   "main": "./src/index.js",
   "module": "./src/index.js",
   "exports": {
-    ".": "./src/index.js",
-    "./react": "./src/adapters/react.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./react": {
+      "types": "./react.d.ts",
+      "default": "./src/adapters/react.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
     "README.md",
-    "index.d.ts"
+    "index.d.ts",
+    "react.d.ts"
   ],
   "repository": {
     "type": "git",
