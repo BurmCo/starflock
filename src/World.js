@@ -147,6 +147,7 @@ export class World {
     this.scrollY = 0
     this._started = false
     this._hoveredNode = null
+    this._resizeTimer = null
     this._pausedHidden = false
     this._pausedOffscreen = false
 
@@ -238,27 +239,48 @@ export class World {
   }
 
   _resize() {
+    const prevWidth = this._logicalWidth
+    const prevHeight = this._logicalHeight
+
     if (!this.options.autoResize) {
+      this._dpr = 1
       this._logicalWidth = this.canvas.width
       this._logicalHeight = this.canvas.height
-      this._createNodes()
-      return
+      this._viewportHeight = this.canvas.height
+    } else {
+      const dpr = this.options.pixelRatio === 'auto' ? (window.devicePixelRatio ?? 1) : this.options.pixelRatio
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+
+      // Backing store covers only the viewport; the world spans the whole
+      // document and _loop translates by scrollY. The canvas must be styled
+      // position: fixed; top: 0; left: 0.
+      this.canvas.width = viewportWidth * dpr
+      this.canvas.height = viewportHeight * dpr
+      this.canvas.style.width = viewportWidth + 'px'
+      this.canvas.style.height = viewportHeight + 'px'
+
+      this._dpr = dpr
+      this._logicalWidth = viewportWidth
+      this._logicalHeight = document.documentElement.scrollHeight
+      this._viewportHeight = viewportHeight
     }
 
-    const dpr = this.options.pixelRatio === 'auto' ? (window.devicePixelRatio ?? 1) : this.options.pixelRatio
-    const logicalWidth = window.innerWidth
-    const logicalHeight = document.documentElement.scrollHeight
+    if (this.nodes.length === 0 || this.options.layout) {
+      this._createNodes()
+    } else if (prevWidth !== this._logicalWidth || prevHeight !== this._logicalHeight) {
+      this._rescaleNodes(prevWidth, prevHeight)
+    }
+  }
 
-    this.canvas.width = logicalWidth * dpr
-    this.canvas.height = logicalHeight * dpr
-    this.canvas.style.width = logicalWidth + 'px'
-    this.canvas.style.height = logicalHeight + 'px'
-
-    this._dpr = dpr
-    this._logicalWidth = logicalWidth
-    this._logicalHeight = logicalHeight
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    this._createNodes()
+  _rescaleNodes(oldWidth, oldHeight) {
+    if (!oldWidth || !oldHeight) return
+    const sx = this._logicalWidth / oldWidth
+    const sy = this._logicalHeight / oldHeight
+    for (const node of this.nodes) {
+      node.x *= sx
+      node.y *= sy
+    }
   }
 
   _onResize() {
