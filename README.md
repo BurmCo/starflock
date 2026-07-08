@@ -300,7 +300,7 @@ Pulls all nodes toward a fixed point. Values `0..1` are relative to canvas size.
 |---|---|---|
 | `x` | `0.5` | Target x — `0.5` = center |
 | `y` | `0.5` | Target y |
-| `strength` | `0.0002` | Force magnitude |
+| `strength` | `0.0003` | Force magnitude |
 
 ### `attract({ x, y, radius, strength })`
 Like gravity but only affects nodes within `radius`. Has a dead zone at the center — combine with `nodeRepel` to prevent clustering.
@@ -318,7 +318,7 @@ Nodes push each other away — simulates charged particles. O(n²), keep `radius
 | Param | Default | |
 |---|---|---|
 | `radius` | `60` | Repulsion radius |
-| `strength` | `0.003` | Force magnitude |
+| `strength` | `0.002` | Force magnitude |
 
 ### `wind({ angle, strength, gust })`
 Constant directional force with optional sinusoidal gusting.
@@ -326,7 +326,7 @@ Constant directional force with optional sinusoidal gusting.
 | Param | Default | |
 |---|---|---|
 | `angle` | `0` | Direction in radians |
-| `strength` | `0.001` | Base force magnitude |
+| `strength` | `0.0005` | Base force magnitude |
 | `gust` | `0` | Gust amplitude |
 
 ### `noise({ scale, strength, speed })`
@@ -334,9 +334,9 @@ Moves nodes along a slowly shifting 2D vector field. Nearby nodes flow in the sa
 
 | Param | Default | |
 |---|---|---|
-| `scale` | `0.004` | Field scale — small = broad sweeping currents |
-| `strength` | `0.001` | Force magnitude |
-| `speed` | `0.0003` | How fast the field shifts over time |
+| `scale` | `0.003` | Field scale — small = broad sweeping currents |
+| `strength` | `0.0008` | Force magnitude |
+| `speed` | `0.0005` | How fast the field shifts over time |
 
 ### `scrollDrift({ mode, strength })`
 Reacts to `world.scrollY`. In `autoResize` mode this tracks `window.scrollY` automatically.
