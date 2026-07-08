@@ -44,6 +44,17 @@
     "url": "https://github.com/BurmCo/starflock/issues"
   },
   "sideEffects": false,
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "node scripts/dev.js",
     "test": "node --test \"test/**/*.test.js\""
