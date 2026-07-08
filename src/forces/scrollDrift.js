@@ -12,6 +12,7 @@
 export function scrollDrift({ mode = 'rotate', strength = 1.0, fn } = {}) {
   let lastScrollY = null
 
+  // not dt-scaled: impulses derive from scroll-event deltas, not per-frame accelerations
   return (nodes, context) => {
     const { scrollY, width, height } = context
     if (lastScrollY === null) {

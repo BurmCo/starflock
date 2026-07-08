@@ -9,6 +9,7 @@
 export function gravity({ x = 0.5, y = 0.5, strength = 0.0003 } = {}) {
   return (nodes, context) => {
     const { width, height } = context
+    const dt = context.dt ?? 1
 
     const resolveCoord = (val, size) => {
       if (typeof val === 'function') return val(context)
@@ -23,8 +24,8 @@ export function gravity({ x = 0.5, y = 0.5, strength = 0.0003 } = {}) {
       const dy = ty - node.y
       const distSq = dx * dx + dy * dy + 1 // +1 avoids division by zero
       const f = strength / distSq * Math.sqrt(distSq)
-      node.vx += dx * f
-      node.vy += dy * f
+      node.vx += dx * f * dt
+      node.vy += dy * f * dt
     }
   }
 }

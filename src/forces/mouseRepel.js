@@ -14,6 +14,7 @@ export function mouseRepel({ mode = 'repel', radius = 120, strength = 0.012, fn 
   return (nodes, context) => {
     const { mouse } = context
     if (!mouse) return
+    const dt = context.dt ?? 1
 
     if (mode === 'custom' && typeof fn === 'function') {
       for (const node of nodes) fn(node, mouse, context)
@@ -29,18 +30,18 @@ export function mouseRepel({ mode = 'repel', radius = 120, strength = 0.012, fn 
       const t = (radius - dist) / radius // 0..1, stronger near center
 
       if (mode === 'repel') {
-        const f = t * strength
+        const f = t * strength * dt
         node.vx += (dx / dist) * f
         node.vy += (dy / dist) * f
 
       } else if (mode === 'attract') {
-        const f = t * strength
+        const f = t * strength * dt
         node.vx -= (dx / dist) * f
         node.vy -= (dy / dist) * f
 
       } else if (mode === 'orbit') {
         // perpendicular force creates circular motion
-        const f = t * strength
+        const f = t * strength * dt
         node.vx += (-dy / dist) * f
         node.vy += (dx / dist) * f
       }

@@ -1,4 +1,6 @@
 export function drift({ maxSpeed = 0.08, minSpeed = 0.008 } = {}) {
+  // not dt-scaled: a pure speed clamp — velocities are per-frame-unit and the
+  // thresholds keep their meaning at any refresh rate
   return (nodes) => {
     for (const node of nodes) {
       const spd = Math.hypot(node.vx, node.vy)

@@ -11,6 +11,7 @@
 export function attract({ x = 0.5, y = 0.5, radius = 200, strength = 0.001 } = {}) {
   return (nodes, context) => {
     const { width, height } = context
+    const dt = context.dt ?? 1
     const tx = typeof x === 'function' ? x(width, height) : (x >= 0 && x <= 1 ? x * width : x)
     const ty = typeof y === 'function' ? y(width, height) : (y >= 0 && y <= 1 ? y * height : y)
 
@@ -19,8 +20,8 @@ export function attract({ x = 0.5, y = 0.5, radius = 200, strength = 0.001 } = {
       const dy = ty - node.y
       const dist = Math.hypot(dx, dy)
       if (dist < 20 || dist > radius) continue
-      node.vx += (dx / dist) * strength
-      node.vy += (dy / dist) * strength
+      node.vx += (dx / dist) * strength * dt
+      node.vy += (dy / dist) * strength * dt
     }
   }
 }

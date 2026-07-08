@@ -11,13 +11,13 @@ export function wind({ angle = 0, strength = 0.0005, gust = 0 } = {}) {
   const cos = Math.cos(angle)
   const sin = Math.sin(angle)
 
-  return (nodes, { time }) => {
+  return (nodes, { time, dt = 1 }) => {
     const currentStrength = gust > 0
       ? strength + gust * Math.sin(time * 0.001)
       : strength
 
-    const fx = cos * currentStrength
-    const fy = sin * currentStrength
+    const fx = cos * currentStrength * dt
+    const fy = sin * currentStrength * dt
 
     for (const node of nodes) {
       node.vx += fx

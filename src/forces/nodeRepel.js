@@ -8,7 +8,7 @@
  * keeping it practical for typical particle counts (up to ~500 nodes).
  */
 export function nodeRepel({ radius = 60, strength = 0.002 } = {}) {
-  return (nodes) => {
+  return (nodes, { dt = 1 } = {}) => {
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i]
@@ -19,7 +19,7 @@ export function nodeRepel({ radius = 60, strength = 0.002 } = {}) {
         if (dist >= radius || dist < 1e-6) continue
 
         const t = (radius - dist) / radius // 1 at center, 0 at edge
-        const f = t * strength / dist
+        const f = t * strength / dist * dt
         const fx = dx * f
         const fy = dy * f
 

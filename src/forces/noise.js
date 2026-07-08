@@ -55,7 +55,7 @@ export function noise({ scale = 0.003, strength = 0.0008, speed = 0.0005 } = {})
     return { nx, ny }
   }
 
-  return (nodes, { time }) => {
+  return (nodes, { time, dt = 1 }) => {
     const offset = time * speed
 
     for (const node of nodes) {
@@ -64,8 +64,8 @@ export function noise({ scale = 0.003, strength = 0.0008, speed = 0.0005 } = {})
 
       const { nx, ny } = valueNoiseVec(wx, wy)
 
-      node.vx += nx * strength
-      node.vy += ny * strength
+      node.vx += nx * strength * dt
+      node.vy += ny * strength * dt
     }
   }
 }
