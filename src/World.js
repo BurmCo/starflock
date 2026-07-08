@@ -661,7 +661,7 @@ export class World {
     return sprite
   }
 
-  _drawNodes(ctx, nodes, opts, width, height) {
+  _drawNodes(ctx, nodes, opts) {
     const drawShape = resolveShape(opts.nodeShape)
 
     for (const node of nodes) {
@@ -770,11 +770,11 @@ export class World {
     }
 
     if (opts.renderOrder === 'nodes-first') {
-      this._drawNodes(ctx, nodes, opts, width, height)
+      this._drawNodes(ctx, nodes, opts)
       this._drawEdges(ctx, nodes, opts, width, height)
     } else {
       this._drawEdges(ctx, nodes, opts, width, height)
-      this._drawNodes(ctx, nodes, opts, width, height)
+      this._drawNodes(ctx, nodes, opts)
     }
 
     ctx.globalAlpha = 1
