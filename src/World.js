@@ -104,7 +104,9 @@ const DEFAULTS = {
   // When false: World never sets canvas.width/height — caller is responsible for sizing
   autoResize: true,
 
-  // Pause RAF when canvas is not visible in the viewport (uses IntersectionObserver)
+  // Pause RAF when canvas is not visible in the viewport (uses IntersectionObserver).
+  // Ineffective with autoResize: true — the fixed viewport canvas always intersects
+  // the viewport; useful for autoResize: false embedded canvases.
   pauseWhenOffscreen: false,
 }
 
